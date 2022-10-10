@@ -110,24 +110,32 @@ class Mesh {
         let verts = []
         let indis = []
         
-        var lines = text.split('\n');
+        text = text.replace(/\r/g, '');
+        let lines = text.split('\n');
+        lines = lines.filter(e => { return e !== ''; });
+        //console.log(lines)
 
-        for (const line in lines) {
-          let entries = line.split(' ');
+        for (let i = 0; i < lines.length; i++) {
+          let entries = lines[i].split(' ').filter(e => { return e !== ''; });
+          //console.log(entries)
           let vals = entries.slice(1);
 
-          for (let i = 0; i < vals.length; i++) {
-            vals[i] = parseFloat(vals[i]);
+          for (let j = 0; j < vals.length; j++) {
+            vals[j] = parseFloat(vals[j]);
           }
 
-          if (entries[0] == "v") {
-            let colors = [Math.random(), Math.random(), Math.random(), 0];
-            verts.push(vals);
-            verts.push(colors);
+          if (entries[0] === "v") {
+            let colors = [Math.random(), Math.random(), Math.random(), 1];
+            verts = verts.concat(vals);
+            verts = verts.concat(colors);
           } else {
-            indis.push(vals);
+            vals = vals.map(n => {return n - 1})
+            indis = indis.concat(vals);
           }
         }
+
+        console.log(verts)
+        console.log(indis)
 		
         return new Mesh( gl, program, verts, indis );
     }
