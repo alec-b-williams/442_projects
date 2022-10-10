@@ -18,7 +18,21 @@ function create_and_load_vertex_buffer(gl, data, usage) {
     
     gl.bindBuffer( gl.ARRAY_BUFFER, current_array_buf );
 
+    console.log("loaded vertex buffer")
     return buf_id;
+}
+
+function create_and_load_elements_buffer(gl, data, usage) {
+  let current_array_buf = gl.getParameter( gl.ARRAY_BUFFER_BINDING );
+
+  let buf_id = gl.createBuffer();
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, buf_id );
+  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Float32Array(data), usage );
+  
+  gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, current_array_buf );
+
+  console.log("loaded elements buffer")
+  return buf_id;
 }
 
 /**

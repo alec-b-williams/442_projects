@@ -3,6 +3,7 @@
     <head>
         <style>
             #the-canvas { border: 1px solid darkblue; }
+            body {background-color: black;}
         </style>
     </head>
 
@@ -10,23 +11,14 @@
         <canvas id = "the-canvas" width = "800" height = "600"></canvas>
         <script src = "lib.js"></script>
         <script src = "vector_template.js"></script>
-        <script src =  "matrix_template.js"></script>
+        <script src = "matrix_template.js"></script>
+        <script src = "mesh.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
             
             /** @type {WebGLRenderingContext} */
             let gl = canvas.getContext( 'webgl2' );
-
-            let hRatio = 600/800; //value to multiply x-coords with to make the rectangle a square
-            let verts = [ 
-                //triangle 0
-                0.0, 0.577, 0.0,    0.0, 1.0, 0.0, 1.0,  //top, green
-                0.5, -0.288, 0.0,   0.0, 0.0, 1.0, 1.0,  //bottom left, red
-                -0.5, -0.288, 0.0,  1.0, 0.0, 0.0, 1.0,  //bottom right, green
-            ];
-
-            let vertex_buffer = create_and_load_vertex_buffer(gl, verts, gl.STATIC_DRAW);
             
             let vertex_source = 
             `   #version 300 es
@@ -60,7 +52,7 @@
 
             let shader_program = 
                 create_compile_and_link_program( gl, vertex_source, fragment_source );
-            gl.useProgram( shader_program );
+            /*gl.useProgram( shader_program );
 
             set_vertex_attrib_to_buffer( 
                 gl, shader_program, 
@@ -76,9 +68,9 @@
                 gl.FLOAT, false, 28, 12
             );
 
-            set_render_params( gl );
+            set_render_params( gl );*/
 
-            const xy_rotation_speed = 0.25;
+            /*const xy_rotation_speed = 0.25;
             const xz_rotation_speed = 0.5;
             const yz_rotation_speed = 0.05;
 
@@ -86,12 +78,18 @@
             let xz_rotation_amt = 0.0;
             let yz_rotation_amt = 0.0;
 
-            let last_update = performance.now()
+            let last_update = performance.now()*/
             
-            requestAnimationFrame(render);
+            //requestAnimationFrame(render);
 
             //delete_program_and_attached_shaders( gl, shader_program );
             //gl.deleteBuffer( vertex_buffer );
+
+            let mesh = Mesh.from_obj_file( gl, "triangle.obj", shader_program, test)
+
+            function test(mesh) {
+              console.log(mesh.n_verts)
+            }
 
             function render(now) {
               requestAnimationFrame(render);

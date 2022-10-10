@@ -107,10 +107,27 @@ class Mesh {
     static from_obj_text( gl, program, text ) {
         // create verts and indis from the text 
 		
-		let verts = []
-		let indis = []
-		
-		// YOUR CODE GOES HERE 
+        let verts = []
+        let indis = []
+        
+        var lines = text.split('\n');
+
+        for (const line in lines) {
+          let entries = line.split(' ');
+          let vals = entries.slice(1);
+
+          for (let i = 0; i < vals.length; i++) {
+            vals[i] = parseFloat(vals[i]);
+          }
+
+          if (entries[0] == "v") {
+            let colors = [Math.random(), Math.random(), Math.random(), 0];
+            verts.push(vals);
+            verts.push(colors);
+          } else {
+            indis.push(vals);
+          }
+        }
 		
         return new Mesh( gl, program, verts, indis );
     }
@@ -135,7 +152,7 @@ class Mesh {
             }
 
             // now we know the file exists and is ready
-			// load the file 
+			      // load the file 
             let loaded_mesh = Mesh.from_obj_text( gl, program, request.responseText );
 
             console.log( 'loaded ', file_name );
