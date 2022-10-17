@@ -129,7 +129,7 @@ class Mesh {
             verts = verts.concat(vals);
             verts = verts.concat(colors);
           } else {
-            vals = vals.map(n => {return n - 1})
+            vals = vals.map(n => {return n - 1}).reverse();
             indis = indis.concat(vals);
           }
         }
