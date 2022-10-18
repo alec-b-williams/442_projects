@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #the-canvas { border: 1px solid darkblue; }
+            body {background-color: black; color: white;}
+        </style>
+    </head>
+
+    <body>
+        <canvas id = "the-canvas" width = "800" height = "600"></canvas>
+        <br>  
+        <button onclick="update_fov(-5)">--</button>
+        <button onclick="update_fov(-1)">-</button>
+        <span id="fov_label">FoV: 90</span>
+        <button onclick="update_fov(1)">+</button>
+        <button onclick="update_fov(5)">++</button>
+        <br>  
+        <button onclick="update_dist(-.5)">--</button>
+        <button onclick="update_dist(-.1)">-</button>
+        <span id="dist_label">Dist: 1</span>
+        <button onclick="update_dist(.1)">+</button>
+        <button onclick="update_dist(.5)">++</button>
+
+        <script src = "lib.js"></script>
+        <script src = "vector_lib.js"></script>
+        <script src = "matrix_lib.js"></script>
+        <script src = "mesh.js"></script>
+        <script src = "modelview.js"></script>
+                 
+        <script>
+            let canvas = document.getElementById( 'the-canvas' );
+            
+            /** @type {WebGLRenderingContext} */
+            let gl = canvas.getContext( 'webgl2' );
+            
+            let vertex_source = 
+            `   #version 300 es
+                precision mediump float;
+
+                uniform mat4 modelview;
+
+                in vec3 coordinates;
+                in vec4 color;
+
+                out vec4 v_color;
+
+                void main( void ) {
+                    gl_Position = modelview * vec4( coordinates, 1.0 );
+                    v_color = color;
+                }
+            `;
+            
+            let fragment_source = 
+            `   #version 300 es
+                precision mediump float;
+
+                in vec4 v_color;
+
+                out vec4 f_color;
+
+                void main( void ) {
+                    f_color = v_color;
+                }
+            `;
+
+            let shader_program = 
+                create_compile_and_link_program( gl, vertex_source, fragment_source );
+
+
+            const xy_rotation_speed = 0.25;
+            const xz_rotation_speed = 0.125;
+            const yz_rotation_speed = 0.05;
+
+            let xy_rotation_amt = 0.0;
+            let xz_rotation_amt = 0.0;
+            let yz_rotation_amt = 0.0;
+
+            let fov = 90;
+            let cube_dist = 1;
+
+            let last_update = performance.now()
+
+            let box = Mesh.box(gl, shader_program, 1, 1, 1);
+            startRendering(box);
+
+            function startRendering(mesh) {
+                this.mesh = mesh;
+
+                gl.cullFace( gl.BACK );
+                gl.enable( gl.CULL_FACE );
+                
+                gl.useProgram( mesh.program );
+
+                set_vertex_attrib_to_buffer( 
+                    gl, mesh.program, 
+                    "coordinates", 
+                    mesh.verts, 3, 
+                    gl.FLOAT, false, VERTEX_STRIDE, 0 
+                );
+
+                set_vertex_attrib_to_buffer( 
+                    gl, mesh.program, 
+                    "color", 
+                    mesh.verts, 4, 
+                    gl.FLOAT, false, VERTEX_STRIDE, 12
+                );
+
+                set_render_params( gl );
+                requestAnimationFrame(render);
+            }
+
+            function render(now) {
+
+                requestAnimationFrame(render);
+                let time_delta = ( now - last_update ) / 1000;
+                last_update = now;
+                update_rotation(time_delta);
+
+                let view = getFrustum(8/6, fov, 0, 100);
+
+                //console.log(view)
+
+                let transform = Mat4.translation(0, 0, cube_dist);
+                let xz_model = transform.mul(Mat4.rotation_xz(xz_rotation_amt));
+                let scale = .25
+                let scale_model = Mat4.scale(scale, scale, scale);
+
+                let model = xz_model.mul(scale_model);
+                let viewmodel = view.mul(model);
+
+                gl.clear( gl.COLOR_BUFFER_BIT );
+
+                draw(viewmodel);
+            }
+
+            function update_rotation(delta) {
+                xy_rotation_amt += xy_rotation_speed * delta;
+                xy_rotation_amt %= 1;
+
+                xz_rotation_amt += xz_rotation_speed * delta;
+                xz_rotation_amt %= 1;
+
+                yz_rotation_amt += yz_rotation_speed * delta;
+                yz_rotation_amt %= 1;
+            }
+
+            function draw(model) {
+                gl.bindBuffer( gl.ARRAY_BUFFER, this.mesh.verts );
+                gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.mesh.indis );
+
+                set_uniform_matrix4(gl, shader_program, "modelview", model.data)
+
+                gl.drawElements( gl.TRIANGLES, this.mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
+            }
+
+            function update_fov(n) {
+              fov += n;
+              document.getElementById("fov_label").textContent = "FoV: " + fov
+            }
+
+            function update_dist(n) {
+              cube_dist += n;
+              document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1)
+            }
+        </script>
+    </body>
+</html>
