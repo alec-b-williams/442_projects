@@ -18,7 +18,7 @@
         <br>  
         <button onclick="update_dist(-.5)">--</button>
         <button onclick="update_dist(-.1)">-</button>
-        <span id="dist_label">Dist: 1</span>
+        <span id="dist_label">Dist: 0.5</span>
         <button onclick="update_dist(.1)">+</button>
         <button onclick="update_dist(.5)">++</button>
 
@@ -60,7 +60,8 @@
                 out vec4 f_color;
 
                 void main( void ) {
-                    f_color = v_color;
+                    //f_color = v_color;
+                    f_color = vec4(vec3(gl_FragCoord.z), 1.0); 
                 }
             `;
 
@@ -77,7 +78,7 @@
             let yz_rotation_amt = 0.0;
 
             let fov = 90;
-            let cube_dist = 1;
+            let cube_dist = 0.5;
 
             let last_update = performance.now()
 
@@ -117,13 +118,13 @@
                 last_update = now;
                 update_rotation(time_delta);
 
-                let view = getFrustum(8/6, fov, 0, 100);
+                let view = getFrustum(8/6, fov, 1, 1000);
 
                 //console.log(view)
 
                 let transform = Mat4.translation(0, 0, cube_dist);
                 let xz_model = transform.mul(Mat4.rotation_xz(xz_rotation_amt));
-                let scale = .25
+                let scale = 1
                 let scale_model = Mat4.scale(scale, scale, scale);
 
                 let model = xz_model.mul(scale_model);
