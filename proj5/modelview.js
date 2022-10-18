@@ -28,10 +28,8 @@ function getPerspectiveFrustum(left, right, bottom, top, near, far) {
   let c1 = (2 * far * near) / (far - near);
   let c2 = (far + near) / (far - near);
 
-  let x_scale = near/right;
-  let y_scale = near/top;
-  
-  //console.log("returning perspective frustum");
+  let x_scale = (2*near)/(right-left);
+  let y_scale = (2*near)/(top - bottom);
 
   return new Mat4([
     x_scale, 0, 0, 0,

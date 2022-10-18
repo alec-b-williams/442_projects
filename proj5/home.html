@@ -18,9 +18,15 @@
         <br>  
         <button onclick="update_dist(-.5)">--</button>
         <button onclick="update_dist(-.1)">-</button>
-        <span id="dist_label">Dist: 0.5</span>
+        <span id="dist_label">Dist: 1.8</span>
         <button onclick="update_dist(.1)">+</button>
         <button onclick="update_dist(.5)">++</button>
+        <br>  
+        <button onclick="update_near(-.05)">--</button>
+        <button onclick="update_near(-.01)">-</button>
+        <span id="near_label">z-near: 1.00</span>
+        <button onclick="update_near(.01)">+</button>
+        <button onclick="update_near(.05)">++</button>
 
         <script src = "lib.js"></script>
         <script src = "vector_lib.js"></script>
@@ -78,7 +84,8 @@
             let yz_rotation_amt = 0.0;
 
             let fov = 90;
-            let cube_dist = 0.5;
+            let cube_dist = 1.8;
+            let z_near = 1;
 
             let last_update = performance.now()
 
@@ -118,7 +125,7 @@
                 last_update = now;
                 update_rotation(time_delta);
 
-                let view = getFrustum(8/6, fov, 1, 1000);
+                let view = getFrustum(8/6, fov, z_near, 1001);
 
                 //console.log(view)
 
@@ -163,6 +170,11 @@
             function update_dist(n) {
               cube_dist += n;
               document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1)
+            }
+
+            function update_near(n) {
+              z_near  += n;
+              document.getElementById("near_label").textContent = "z-near: " + z_near.toFixed(2)
             }
         </script>
     </body>
