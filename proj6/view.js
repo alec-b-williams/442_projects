@@ -37,28 +37,46 @@ class View {
     this.yaw += ya;
   }
 
-  update(delta) {
+  update(delta, inversion) {
     let keys = this.input.keys_down_list();
     let x=0, y=0, z=0, p=0, r=0, ya=0;
 
+    let roll = Mat4.rotation_xy(this.roll);
+    let pitch = Mat4.rotation_yz(this.pitch);
+    let yaw  = Mat4.rotation_xz(this.yaw);
+    let view = yaw.mul(pitch).mul(roll)
+
     if (keys.includes("KeyA")) {
-      x -= transform_scale;
+      x -= view.data[0]*transform_scale;
+      y -= view.data[4]*transform_scale;
+      z -= view.data[8]*transform_scale;
     }
     if (keys.includes("KeyD")) {
-      x += transform_scale;
-    }
-    if (keys.includes("KeyW")) {
-      z += transform_scale;
-    }
-    if (keys.includes("KeyS")) {
-      z -= transform_scale;
-    }
-    if (keys.includes("Space")) {
-      y += transform_scale;
+      x += view.data[0]*transform_scale;
+      y += view.data[4]*transform_scale;
+      z += view.data[8]*transform_scale;
     }
     if (keys.includes("KeyC")) {
-      y -= transform_scale;
+      x -= view.data[1]*transform_scale;
+      y -= view.data[5]*transform_scale;
+      z -= view.data[9]*transform_scale;
     }
+    if (keys.includes("Space")) {
+      x += view.data[1]*transform_scale;
+      y += view.data[5]*transform_scale;
+      z += view.data[9]*transform_scale;
+    }
+    if (keys.includes("KeyS")) {
+      x -= view.data[2]*transform_scale;
+      y -= view.data[6]*transform_scale;
+      z -= view.data[10]*transform_scale;
+    }
+    if (keys.includes("KeyW")) {
+      x += view.data[2]*transform_scale;
+      y += view.data[6]*transform_scale;
+      z += view.data[10]*transform_scale;
+    }
+    
     if (keys.includes("KeyQ")) {
       r -= rotate_scale;
     }
@@ -66,10 +84,10 @@ class View {
       r += rotate_scale;
     }
     if (keys.includes("ArrowUp")) {
-      p -= rotate_scale;
+      p -= inversion * rotate_scale;
     }
     if (keys.includes("ArrowDown")) {
-      p += rotate_scale;
+      p += inversion * rotate_scale;
     }
     if (keys.includes("ArrowRight")) {
       ya += rotate_scale;

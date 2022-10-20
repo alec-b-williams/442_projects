@@ -29,6 +29,15 @@
         <button onclick="projection.set_near(.05)">++</button>
         <br>
         <span id="keys_label"></span>
+        <br>
+        <button onclick="toggle_inversion()">toggle</button><span id="inversion_label"></span><br>
+        <span>Camera Position:</span><br>
+        <span id="cam_x_label"></span><br>
+        <span id="cam_y_label"></span><br>
+        <span id="cam_z_label"></span><br>
+        <span id="cam_roll_label"></span><br>
+        <span id="cam_pitch_label"></span><br>
+        <span id="cam_yaw_label"></span><br>  
 
         <script src = "lib.js"></script>
         <script src = "vector_lib.js"></script>
@@ -86,7 +95,8 @@
             const DESIRED_TICK_RATE = 60;
             const DESIRED_MSPT = 1000 / DESIRED_TICK_RATE;
 
-            let cube_dist = 1.8;
+            let cube_dist = 0;
+            let look_inversion = 1;
 
             let last_update = performance.now();
             let total_delta = 0;
@@ -129,8 +139,8 @@
                 last_update = now;
                 total_delta += time_delta
 
-                let transform = Mat4.translation(0, 0, 0);
-                let xz_rotation = Model.getXZRotation(/*total_delta*/ 0);
+                let transform = Mat4.translation(0, 0, cube_dist);
+                let xz_rotation = Model.getXZRotation(0);
                 let model = transform.mul(xz_rotation);
 
                 let view = camera.getView();
@@ -154,7 +164,7 @@
             }
 
             function update() {
-              camera.update(DESIRED_MSPT);
+              camera.update(DESIRED_MSPT, look_inversion);
               projection.update(DESIRED_MSPT);
               update_labels();
             }
@@ -163,11 +173,22 @@
               cube_dist += n;
             }
 
+            function toggle_inversion() {
+              look_inversion *= -1;
+            }
+
             function update_labels() {
               document.getElementById("fov_label").textContent = "FoV: " + projection.fov;
               document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1);
               document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
               document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
+              document.getElementById("inversion_label").textContent = " look inversion: " + (look_inversion == 1 ? "true" : "false")
+              document.getElementById("cam_x_label").textContent = "x: " + camera.x.toFixed(2);
+              document.getElementById("cam_y_label").textContent = "y: " + camera.y.toFixed(2);
+              document.getElementById("cam_z_label").textContent = "z: " + camera.z.toFixed(2);
+              document.getElementById("cam_roll_label").textContent = "roll: " + (camera.roll*360).toFixed(1);
+              document.getElementById("cam_pitch_label").textContent = "pitch: " + (camera.pitch*360).toFixed(1)
+              document.getElementById("cam_yaw_label").textContent = "yaw: " + (camera.yaw*360).toFixed(1)
             }
 
         </script>
