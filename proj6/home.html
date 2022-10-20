@@ -12,19 +12,19 @@
         <br>  
         <button onclick="projection.set_fov(-5)">--</button>
         <button onclick="projection.set_fov(-1)">-</button>
-        <span id="fov_label">FoV: 90</span>
+        <span id="fov_label"></span>
         <button onclick="projection.set_fov(1)">+</button>
         <button onclick="projection.set_fov(5)">++</button>
         <br>  
         <button onclick="update_dist(-.5)">--</button>
         <button onclick="update_dist(-.1)">-</button>
-        <span id="dist_label">Dist: 1.8</span>
+        <span id="dist_label"></span>
         <button onclick="update_dist(.1)">+</button>
         <button onclick="update_dist(.5)">++</button>
         <br>  
         <button onclick="projection.set_near(-.05)">--</button>
         <button onclick="projection.set_near(-.01)">-</button>
-        <span id="near_label">z-near: 1.00</span>
+        <span id="near_label"></span>
         <button onclick="projection.set_near(.01)">+</button>
         <button onclick="projection.set_near(.05)">++</button>
         <br>
@@ -81,11 +81,7 @@
             const input = Keys.start_listening();
             const camera = new View(input);
 
-            const default_fov = 90;
-            const default_z_near = .1;
-            const default_z_far = 1001;
-            const ratio = 8/6;
-            const projection = new Projection(ratio, default_fov, default_z_near, default_z_far);
+            const projection = new Projection(input);
 
             const DESIRED_TICK_RATE = 60;
             const DESIRED_MSPT = 1000 / DESIRED_TICK_RATE;
@@ -159,6 +155,7 @@
 
             function update() {
               camera.update(DESIRED_MSPT);
+              projection.update(DESIRED_MSPT);
               update_labels();
             }
 

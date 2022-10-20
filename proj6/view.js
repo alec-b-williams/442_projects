@@ -19,7 +19,22 @@ class View {
     let yaw  = Mat4.rotation_xz(this.yaw);
     let translation = Mat4.translation(this.x, this.y, this.z);
 
-    return translation.mul(yaw).mul(pitch).mul(roll).inverse();
+    let view = yaw.mul(pitch).mul(roll)
+    view = translation.mul(view);
+    return view.inverse();
+  }
+
+  update_bearing(x, y, z, p, r, ya) {
+    this.x += x;
+    this.y += y;
+    this.z += z;
+    
+    if (((this.pitch + p) < 0.25) && ((this.pitch + p) > -0.25)) {
+      this.pitch += p;
+    }
+
+    this.roll += r;
+    this.yaw += ya;
   }
 
   update(delta) {
@@ -63,20 +78,6 @@ class View {
       ya -= rotate_scale;
     }
 
-
     this.update_bearing(x, y, z, p, r, ya);
-  }
-
-  update_bearing(x, y, z, p, r, ya) {
-    this.x += x;
-    this.y += y;
-    this.z += z;
-    
-    if (((this.pitch + p) < 0.25) && ((this.pitch + p) > -0.25)) {
-      this.pitch = p;
-    }
-
-    this.roll += r;
-    this.yaw += ya;
   }
 }

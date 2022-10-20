@@ -1,11 +1,13 @@
+const fov_scale = 0.5;
 
 class Projection {
 
-  constructor(ratio, fov, z_near, z_far) {
-    this.ratio = ratio;
-    this.fov = fov;
-    this.z_near = z_near;
-    this.z_far = z_far;
+  constructor(input) {
+    this.ratio = 8/6;
+    this.fov = 90;
+    this.z_near = 0.1;
+    this.z_far = 1001;
+    this.input = input;
   }
 
   set_fov(n) {
@@ -18,6 +20,17 @@ class Projection {
 
   set_far(n) {
     this.z_far += n;
+  }
+
+  update(delta) {
+    let keys = this.input.keys_down_list();
+    
+    if (keys.includes("KeyZ")) {
+      this.fov -= fov_scale;
+    }
+    if (keys.includes("KeyX")) {
+      this.fov += fov_scale;
+    }
   }
 
   static getPerspectiveFrustum(left, right, bottom, top, near, far) {
