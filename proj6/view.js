@@ -11,6 +11,7 @@ class View {
     this.roll = 0;
     this.yaw = 0;
     this.input = input;
+    this.inversion = 1;
   }
 
   getView() {
@@ -83,18 +84,23 @@ class View {
     if (keys.includes("KeyE")) {
       r += rotate_scale;
     }
-    if (keys.includes("ArrowUp")) {
-      p -= inversion * rotate_scale;
-    }
-    if (keys.includes("ArrowDown")) {
-      p += inversion * rotate_scale;
-    }
     if (keys.includes("ArrowRight")) {
-      ya += rotate_scale;
+      ya += Math.cos(-this.roll*2*Math.PI)*rotate_scale;
+      p += Math.sin(-this.roll*2*Math.PI)*rotate_scale;
     }
     if (keys.includes("ArrowLeft")) {
-      ya -= rotate_scale;
+      ya -= Math.cos(-this.roll*2*Math.PI)*rotate_scale;
+      p -= Math.sin(-this.roll*2*Math.PI)*rotate_scale;
     }
+    if (keys.includes("ArrowUp")) {
+      ya -= Math.sin(this.roll*2*Math.PI)*rotate_scale*this.inversion;
+      p -= Math.cos(this.roll*2*Math.PI)*rotate_scale*this.inversion;
+    }
+    if (keys.includes("ArrowDown")) {
+      ya += Math.sin(this.roll*2*Math.PI)*rotate_scale*this.inversion;
+      p += Math.cos(this.roll*2*Math.PI)*rotate_scale*this.inversion;
+    }
+    
 
     this.update_bearing(x, y, z, p, r, ya);
   }

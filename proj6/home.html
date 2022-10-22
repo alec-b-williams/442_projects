@@ -95,7 +95,6 @@
             const DESIRED_MSPT = 1000 / DESIRED_TICK_RATE;
 
             let cube_dist = 0;
-            let look_inversion = 1;
 
             let last_update = performance.now();
             let total_delta = 0;
@@ -163,7 +162,7 @@
             }
 
             function update() {
-              camera.update(DESIRED_MSPT, look_inversion);
+              camera.update(DESIRED_MSPT);
               projection.update(DESIRED_MSPT);
               update_labels();
             }
@@ -173,7 +172,7 @@
             }
 
             function toggle_inversion() {
-              look_inversion *= -1;
+              camera.inversion *= -1;
             }
 
             function update_labels() {
@@ -181,7 +180,7 @@
               document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1);
               document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
               document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
-              document.getElementById("inversion_label").textContent = " look inversion: " + (look_inversion == 1 ? "true" : "false")
+              document.getElementById("inversion_label").textContent = " look inversion: " + (camera.inversion == 1 ? "true" : "false")
               document.getElementById("cam_x_label").textContent = "x: " + camera.x.toFixed(2);
               document.getElementById("cam_y_label").textContent = "y: " + camera.y.toFixed(2);
               document.getElementById("cam_z_label").textContent = "z: " + camera.z.toFixed(2);
