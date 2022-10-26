@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            #the-canvas { border: 1px solid darkblue; }
+            body {background-color: black; color: white;}
+        </style>
+    </head>
+
+    <body>
+        <canvas id = "the-canvas" width = "800" height = "600"></canvas>
+        <br>  
+        <button onclick="projection.set_fov(-5)">--</button>
+        <button onclick="projection.set_fov(-1)">-</button>
+        <span id="fov_label"></span>
+        <button onclick="projection.set_fov(1)">+</button>
+        <button onclick="projection.set_fov(5)">++</button>
+        <br>  
+        <button onclick="update_dist(-.5)">--</button>
+        <button onclick="update_dist(-.1)">-</button>
+        <span id="dist_label"></span>
+        <button onclick="update_dist(.1)">+</button>
+        <button onclick="update_dist(.5)">++</button>
+        <br>  
+        <button onclick="projection.set_near(-.05)">--</button>
+        <button onclick="projection.set_near(-.01)">-</button>
+        <span id="near_label"></span>
+        <button onclick="projection.set_near(.01)">+</button>
+        <button onclick="projection.set_near(.05)">++</button>
+        <br>
+        <span id="keys_label"></span>
+        <br>
+        <button onclick="toggle_inversion()">toggle</button><span id="inversion_label"></span><br>
+        <span>Camera Position:</span><br>
+        <span id="cam_x_label"></span><br>
+        <span id="cam_y_label"></span><br>
+        <span id="cam_z_label"></span><br>
+        <span id="cam_roll_label"></span><br>
+        <span id="cam_pitch_label"></span><br>
+        <span id="cam_yaw_label"></span><br>  
+
+        <script src = "lib.js"></script>
+        <script src = "vector_lib.js"></script>
+        <script src = "matrix_lib.js"></script>
+        <script src = "mesh.js"></script>
+        <script src = "input.js"></script>
+        <script src = "model.js"></script>
+        <script src = "view.js"></script>
+        <script src = "projection.js"></script>
+                 
+        <script>
+            let canvas = document.getElementById( 'the-canvas' );
+            
+            /** @type {WebGLRenderingContext} */
+            let gl = canvas.getContext( 'webgl2' );
+            
+            let vertex_source = 
+            `   #version 300 es
+                precision mediump float;
+
+                uniform mat4 modelview;
+
+                in vec3 coordinates;
+                in vec4 color;
+                in vec2 uv;
+
+                out vec4 v_color;
+                out vec2 v_uv;
+
+                void main( void ) {
+                    gl_Position = modelview * vec4( coordinates, 1.0 );
+                    v_color = color;
+                    v_uv = uv;
+                }
+            `;
+            
+            let fragment_source = 
+            `   #version 300 es
+                precision mediump float;
+
+                uniform sampler2D tex_0;
+
+                in vec4 v_color;
+                in vec2 v_uv;
+
+                out vec4 f_color;
+
+                void main( void ) {
+                    f_color = texture(tex_0, v_uv);
+                }
+            `;
+
+            let shader_program = 
+                create_compile_and_link_program( gl, vertex_source, fragment_source );
+
+            const input = Keys.start_listening();
+            const camera = new View(input);
+            const projection = new Projection(input);
+
+            const DESIRED_TICK_RATE = 60;
+            const DESIRED_MSPT = 1000 / DESIRED_TICK_RATE;
+
+            let cube_dist = 0;
+
+            let last_update = performance.now();
+            let total_delta = 0;
+
+            let box = Mesh.box(gl, shader_program, 1, 1, 1);
+
+            setInterval(update, DESIRED_MSPT);
+            startRendering(box);
+
+            function startRendering(mesh) {
+                this.mesh = mesh;
+
+                gl.cullFace( gl.BACK );
+                gl.enable( gl.CULL_FACE );
+                
+                gl.useProgram( mesh.program );
+
+                let tex = gl.createTexture();
+                gl.bindTexture( gl.TEXTURE_2D, tex )
+                gl.texImage2D(
+                  gl.TEXTURE_2D, 0, gl.RGBA,
+                  256, 256, 0,
+                  gl.RGBA, gl.UNSIGNED_BYTE, 
+                  xor_texture()
+                );
+
+                const sampler_loc = gl.getUniformLocation( mesh.program, 'tex_0' );
+                gl.uniform1i( sampler_loc, 0 ); 
+
+                set_vertex_attrib_to_buffer( 
+                  gl, mesh.program, 
+                  "coordinates", 
+                  mesh.verts, 3, 
+                  gl.FLOAT, false, VERTEX_STRIDE, 0 
+                );
+
+                set_vertex_attrib_to_buffer( 
+                  gl, mesh.program, 
+                  "color", 
+                  mesh.verts, 4, 
+                  gl.FLOAT, false, VERTEX_STRIDE, 12
+                );
+
+                set_vertex_attrib_to_buffer(
+                  gl, mesh.program,
+                  "uv",
+                  mesh.verts, 2,
+                  gl.FLOAT, false, VERTEX_STRIDE, 28
+                )
+
+                set_render_params( gl );
+                requestAnimationFrame(render);
+            }
+
+            function render(now) {
+                requestAnimationFrame(render);
+
+                let time_delta = ( now - last_update ) / 1000;
+                last_update = now;
+                total_delta += time_delta
+
+                let transform = Mat4.translation(0, 0, cube_dist);
+                let xz_rotation = Model.getXZRotation(0);
+                let model = transform.mul(xz_rotation);
+
+                let view = camera.getView();
+                let modelview = view.mul(model);
+
+                let frustum = projection.getFrustum();
+                let final = frustum.mul(modelview);
+
+                gl.clear( gl.COLOR_BUFFER_BIT );
+
+                draw(final);
+            }
+
+            function draw(model) {
+              gl.bindBuffer( gl.ARRAY_BUFFER, this.mesh.verts );
+              gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.mesh.indis );
+
+              set_uniform_matrix4(gl, shader_program, "modelview", model.data)
+
+              gl.drawElements( gl.TRIANGLES, this.mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
+            }
+
+            function update() {
+              camera.update(DESIRED_MSPT);
+              projection.update(DESIRED_MSPT);
+              update_labels();
+            }
+
+            function update_dist(n) {
+              cube_dist += n;
+            }
+
+            function toggle_inversion() {
+              camera.inversion *= -1;
+            }
+
+            function update_labels() {
+              document.getElementById("fov_label").textContent = "FoV: " + projection.fov;
+              document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1);
+              document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
+              document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
+              document.getElementById("inversion_label").textContent = " look inversion: " + (camera.inversion == 1 ? "true" : "false")
+              document.getElementById("cam_x_label").textContent = "x: " + camera.x.toFixed(2);
+              document.getElementById("cam_y_label").textContent = "y: " + camera.y.toFixed(2);
+              document.getElementById("cam_z_label").textContent = "z: " + camera.z.toFixed(2);
+              document.getElementById("cam_roll_label").textContent = "roll: " + (camera.roll*360).toFixed(1);
+              document.getElementById("cam_pitch_label").textContent = "pitch: " + (camera.pitch*360).toFixed(1)
+              document.getElementById("cam_yaw_label").textContent = "yaw: " + (camera.yaw*360).toFixed(1)
+            }
+
+            function xor_texture() {
+              let data = new Array( 256 * 256 * 4 );
+              // 4 because there are 4 bytes per pixel: R, G, B, and A
+              // generate pixels here
+              let width = 256;
+              for( let row = 0; row < width; row++ ) {
+                for( let col = 0; col < width; col++ ) {
+                  let pix = ( row * width + col ) * 4; // [does this make sense?]
+                  data[pix] = data[pix + 1] = data[pix + 2] = row ^ col;
+                  data[pix + 3] = 255; // alpha always max (fully opaque)
+                }
+              }
+
+              return new Uint8Array( data );
+            }
+
+        </script>
+    </body>
+</html>
