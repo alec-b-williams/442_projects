@@ -38,23 +38,13 @@ class Mesh {
             -hwidth, hheight, -hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,
             hwidth, hheight, -hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,
 
-            hwidth, -hheight, hdepth,       1.0, 0.0, 1.0, 1.0,   1,1,
-            -hwidth, -hheight, hdepth,      0.0, 1.0, 1.0, 1.0,   0,1,
-            -hwidth, hheight, hdepth,       0.5, 0.5, 1.0, 1.0,   0,0,
-            hwidth, hheight, hdepth,        1.0, 1.0, 0.5, 1.0,   1,0,
+            hwidth, -hheight, hdepth,       1.0, 0.0, 1.0, 1.0,   0,0,
+            -hwidth, -hheight, hdepth,      0.0, 1.0, 1.0, 1.0,   1,0,
+            -hwidth, hheight, hdepth,       0.5, 0.5, 1.0, 1.0,   1,1,
+            hwidth, hheight, hdepth,        1.0, 1.0, 0.5, 1.0,   0,1,
         ];
 
         let indis = [
-            // clockwise winding
-            /*
-            0, 1, 2, 2, 3, 0, 
-            4, 0, 3, 3, 7, 4, 
-            5, 4, 7, 7, 6, 5, 
-            1, 5, 6, 6, 2, 1,
-            3, 2, 6, 6, 7, 3,
-            4, 5, 1, 1, 0, 4,
-            */
-
             // counter-clockwise winding
             0, 3, 2, 2, 1, 0,
             4, 7, 3, 3, 0, 4,
@@ -66,6 +56,62 @@ class Mesh {
 
         return new Mesh( gl, program, verts, indis );
     }
+
+    static texturedBox( gl, program, width, height, depth ) {
+      let hwidth = width / 2.0;
+      let hheight = height / 2.0;
+      let hdepth = depth / 2.0;
+
+      let verts = [
+          // front face: 0 - 3
+          -hwidth, hheight, -hdepth,     0.0, 0.0, 1.0, 1.0,   0,0,  // top left
+          hwidth, hheight, -hdepth,      1.0, 1.0, 0.0, 1.0,   1,0,  // top right
+          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
+          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+
+          // right face: 4 - 7
+          hwidth, hheight, -hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
+          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,  // top right
+          hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
+          hwidth, -hheight, hdepth,      1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+
+          // back face: 8 - 11
+          hwidth, hheight, hdepth,       0.0, 0.0, 1.0, 1.0,   0,0,  // top left
+          -hwidth, hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   1,0,  // top right
+          hwidth, -hheight, hdepth,      0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
+          -hwidth, -hheight, hdepth,     1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+
+          // left face: 12 - 15
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
+          -hwidth, hheight, -hdepth,     1.0, 1.0, 0.0, 1.0,   1,0,  // top right
+          -hwidth, -hheight, hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
+          -hwidth, -hheight, -hdepth,    1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+
+          // top face: 16 - 19
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
+          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,  // top right
+          -hwidth, hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
+          hwidth, hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+
+          // bottom face: 20 - 23
+          -hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,0,  // top left
+          hwidth, -hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   1,0,  // top right
+          -hwidth, -hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,1,  // bottom left
+          hwidth, -hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,1,  // bottom right
+      ];
+
+      let indis = [
+          // counter-clockwise winding
+          1,  0,   2,  2,  3,  1,
+          5,  4,   6,  6,  7,  5,
+          9,  8,  10, 10, 11,  9,
+          13, 12, 14, 14, 15, 13,
+          17, 16, 18, 18, 19, 17,
+          21, 20, 22, 22, 23, 21,
+      ];
+
+      return new Mesh( gl, program, verts, indis );
+  }
 
 
     /**
