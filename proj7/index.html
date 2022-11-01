@@ -39,14 +39,14 @@
         <span id="cam_pitch_label"></span><br>
         <span id="cam_yaw_label"></span><br>  
 
-        <script src = "lib.js"></script>
-        <script src = "vector_lib.js"></script>
-        <script src = "matrix_lib.js"></script>
-        <script src = "mesh.js"></script>
-        <script src = "input.js"></script>
-        <script src = "model.js"></script>
-        <script src = "view.js"></script>
-        <script src = "projection.js"></script>
+        <script src = "src/lib.js"></script>
+        <script src = "src/vector_lib.js"></script>
+        <script src = "src/matrix_lib.js"></script>
+        <script src = "src/mesh.js"></script>
+        <script src = "src/input.js"></script>
+        <script src = "src/model.js"></script>
+        <script src = "src/view.js"></script>
+        <script src = "src/projection.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
@@ -105,6 +105,9 @@
             let last_update = performance.now();
             let total_delta = 0;
 
+            let image = new Image();
+            image.src = "textures/texture_map.png";
+            image.onload = on_load;
             let box = Mesh.texturedBox(gl, shader_program, 1, 1, 1);
 
             setInterval(update, DESIRED_MSPT);
@@ -183,7 +186,6 @@
             function draw(model) {
               gl.bindBuffer( gl.ARRAY_BUFFER, this.mesh.verts );
               gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.mesh.indis );
-              //gl.bindTexture(gl.TEXTURE_2D, this.tex)
 
               set_uniform_matrix4(gl, shader_program, "modelview", model.data);
 
@@ -230,6 +232,16 @@
               }
 
               return new Uint8Array( data );
+            }
+
+            function on_load() {
+              //let tex = gl.createTexture();
+              //gl.bindTexture( gl.TEXTURE_2D, this.tex );
+
+              gl.texImage2D(
+                gl.TEXTURE_2D, 0, gl.RGBA,
+                  1024, 1024, 0,
+                  gl.RGBA, gl.UNSIGNED_BYTE, this.image );
             }
 
         </script>
