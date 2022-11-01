@@ -130,12 +130,13 @@
                   gl.RGBA, gl.UNSIGNED_BYTE, 
                   xor_texture()
                 );
+
+                gl.generateMipmap(gl.TEXTURE_2D);
                 
                 const sampler_loc = gl.getUniformLocation( mesh.program, "tex_0" );
                 gl.uniform1i( sampler_loc, 0 ); 
 
                 //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-                gl.generateMipmap(gl.TEXTURE_2D);
 
                 set_vertex_attrib_to_buffer( 
                   gl, mesh.program, 
@@ -235,13 +236,14 @@
             }
 
             function on_load() {
-              //let tex = gl.createTexture();
-              //gl.bindTexture( gl.TEXTURE_2D, this.tex );
-
               gl.texImage2D(
                 gl.TEXTURE_2D, 0, gl.RGBA,
                   1024, 1024, 0,
-                  gl.RGBA, gl.UNSIGNED_BYTE, this.image );
+                  gl.RGBA, gl.UNSIGNED_BYTE, this 
+              );
+
+              gl.generateMipmap(gl.TEXTURE_2D);
+              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             }
 
         </script>

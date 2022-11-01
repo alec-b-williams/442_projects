@@ -64,40 +64,40 @@ class Mesh {
 
       let verts = [
           // front face: 0 - 3
-          -hwidth, hheight, -hdepth,     0.0, 0.0, 1.0, 1.0,   0,0,  // top left
-          hwidth, hheight, -hdepth,      1.0, 1.0, 0.0, 1.0,   1,0,  // top right
-          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
-          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+          -hwidth, hheight, -hdepth,     0.0, 0.0, 1.0, 1.0,   0,    0.25,  // top left
+          hwidth, hheight, -hdepth,      1.0, 1.0, 0.0, 1.0,   0.25, 0.25,  // top right
+          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0,    0.5,   // bottom left
+          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   0.25, 0.5,   // bottom right
 
           // right face: 4 - 7
-          hwidth, hheight, -hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
-          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,  // top right
-          hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
-          hwidth, -hheight, hdepth,      1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+          hwidth, hheight, -hdepth,      0.0, 0.0, 1.0, 1.0,   0.25, 0.25,  // top left
+          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   0.5,  0.25,  // top right
+          hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0.25, 0.5,   // bottom left
+          hwidth, -hheight, hdepth,      1.0, 0.0, 0.0, 1.0,   0.5,  0.5,   // bottom right
 
           // back face: 8 - 11
-          hwidth, hheight, hdepth,       0.0, 0.0, 1.0, 1.0,   0,0,  // top left
-          -hwidth, hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   1,0,  // top right
-          hwidth, -hheight, hdepth,      0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
-          -hwidth, -hheight, hdepth,     1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+          hwidth, hheight, hdepth,       0.0, 0.0, 1.0, 1.0,   0.5,  0.25,  // top left
+          -hwidth, hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // top right
+          hwidth, -hheight, hdepth,      0.0, 1.0, 0.0, 1.0,   0.5,  0.5,   // bottom left
+          -hwidth, -hheight, hdepth,     1.0, 0.0, 0.0, 1.0,   0.75, 0.5,   // bottom right
 
           // left face: 12 - 15
-          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
-          -hwidth, hheight, -hdepth,     1.0, 1.0, 0.0, 1.0,   1,0,  // top right
-          -hwidth, -hheight, hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
-          -hwidth, -hheight, -hdepth,    1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   1,    0.25,  // top left
+          -hwidth, hheight, -hdepth,     1.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // top right
+          -hwidth, -hheight, hdepth,     0.0, 1.0, 0.0, 1.0,   1,    0.5,   // bottom left
+          -hwidth, -hheight, -hdepth,    1.0, 0.0, 0.0, 1.0,   0.75, 0.5,   // bottom right
 
           // top face: 16 - 19
-          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,  // top left
-          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,  // top right
-          -hwidth, hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,  // bottom left
-          hwidth, hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   1,1,  // bottom right
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0.75, 0,     // top left
+          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   0.5,  0,     // top right
+          -hwidth, hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // bottom left
+          hwidth, hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   0.5,  0.25,  // bottom right
 
           // bottom face: 20 - 23
-          -hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,0,  // top left
-          hwidth, -hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   1,0,  // top right
-          -hwidth, -hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0,1,  // bottom left
-          hwidth, -hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   1,1,  // bottom right
+          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0.75, 0.75,  // top left
+          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   0.5, 0.75,   // top right
+          -hwidth, -hheight, hdepth,     0.0, 0.0, 1.0, 1.0,   0.75, 0.5,   // bottom left
+          hwidth, -hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   0.5, 0.5,    // bottom right
       ];
 
       let indis = [
