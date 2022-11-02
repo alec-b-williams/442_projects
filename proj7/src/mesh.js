@@ -82,22 +82,22 @@ class Mesh {
           -hwidth, -hheight, hdepth,     1.0, 0.0, 0.0, 1.0,   0.75, 0.5,   // bottom right
 
           // left face: 12 - 15
-          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   1,    0.25,  // top left
-          -hwidth, hheight, -hdepth,     1.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // top right
-          -hwidth, -hheight, hdepth,     0.0, 1.0, 0.0, 1.0,   1,    0.5,   // bottom left
-          -hwidth, -hheight, -hdepth,    1.0, 0.0, 0.0, 1.0,   0.75, 0.5,   // bottom right
+          -hwidth, hheight, -hdepth,     1.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // top left
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   1,    0.25,  // top right
+          -hwidth, -hheight, -hdepth,    1.0, 0.0, 0.0, 1.0,   0.75, 0.5,   // bottom left
+          -hwidth, -hheight, hdepth,     0.0, 1.0, 0.0, 1.0,   1,    0.5,   // bottom right
 
           // top face: 16 - 19
-          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0.75, 0,     // top left
-          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   0.5,  0,     // top right
-          -hwidth, hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // bottom left
-          hwidth, hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   0.5,  0.25,  // bottom right
+          hwidth, hheight, hdepth,       1.0, 1.0, 0.0, 1.0,   0.5,  0,     // top left
+          -hwidth, hheight, hdepth,      0.0, 0.0, 1.0, 1.0,   0.75, 0,     // top right
+          hwidth, hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   0.5,  0.25,  // bottom left
+          -hwidth, hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0.75, 0.25,  // bottom right
 
           // bottom face: 20 - 23
-          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0.75, 0.75,  // top left
-          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   0.5, 0.75,   // top right
-          -hwidth, -hheight, hdepth,     0.0, 0.0, 1.0, 1.0,   0.75, 0.5,   // bottom left
-          hwidth, -hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   0.5, 0.5,    // bottom right
+          hwidth, -hheight, hdepth,      1.0, 1.0, 0.0, 1.0,   0.5, 0.5,    // top left
+          -hwidth, -hheight, hdepth,     0.0, 0.0, 1.0, 1.0,   0.75, 0.5,   // top right
+          hwidth, -hheight, -hdepth,     1.0, 0.0, 0.0, 1.0,   0.5, 0.75,   // bottom left
+          -hwidth, -hheight, -hdepth,    0.0, 1.0, 0.0, 1.0,   0.75, 0.75,  // bottom right
       ];
 
       let indis = [
@@ -105,8 +105,8 @@ class Mesh {
           1,  0,   2,  2,  3,  1,
           5,  4,   6,  6,  7,  5,
           9,  8,  10, 10, 11,  9,
-          13, 12, 14, 14, 15, 13,
-          17, 16, 18, 18, 19, 17,
+          14, 12, 13, 13, 15, 14,
+          18, 16, 17, 17, 19, 18,
           21, 20, 22, 22, 23, 21,
       ];
 
