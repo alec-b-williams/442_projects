@@ -106,12 +106,12 @@
             let total_delta = 0;
 
             let image = new Image();
-            image.src = "textures/texture_map.png";
+            image.src = "textures/metal_scale.png";
             image.onload = on_load;
-            let box = Mesh.texturedBox(gl, shader_program, 1, 1, 1);
+            let sphere = Mesh.uv_sphere(gl, shader_program, 16, 1);
 
             setInterval(update, DESIRED_MSPT);
-            initRenderSettings(box);
+            initRenderSettings(sphere);
             requestAnimationFrame(render);
 
             function initRenderSettings(mesh) {
@@ -238,7 +238,6 @@
             function on_load() {
               gl.texImage2D(
                 gl.TEXTURE_2D, 0, gl.RGBA,
-                  1024, 1024, 0,
                   gl.RGBA, gl.UNSIGNED_BYTE, this 
               );
 

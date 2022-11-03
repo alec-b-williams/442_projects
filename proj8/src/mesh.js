@@ -1,5 +1,6 @@
-
+const TAU = 2 * Math.PI;
 const VERTEX_STRIDE = 36;
+const UV_VERTEX_STRIDE = 48;
 
 class Mesh {
     /** 
@@ -111,7 +112,46 @@ class Mesh {
       ];
 
       return new Mesh( gl, program, verts, indis );
-  }
+    }
+
+    static uv_sphere(gl, program, subdivs, material) {
+        let verts = []
+        let indis = []
+
+        for (let layer = 0; layer <= subdivs; layer++) {
+            let y_turns = layer / subdivs / 2; 
+            let y = Math.cos( y_turns * TAU ) / 2;
+
+            for( let subdiv = 0; subdiv <= subdivs; subdiv++ ) {
+                let turns = subdiv / subdivs;
+                let rads = turns * TAU;
+            
+                //console.log("layer " + layer + ", subdiv " + subdiv);
+                let x = reduce(Math.cos( rads ) / 2) * Math.sin( y_turns * TAU );
+                let z = reduce(Math.sin( rads ) / 2) * Math.sin( y_turns * TAU );
+
+                //console.log("x: " + x + ", y: " + y + ", z: " + z);
+                verts.push(x,y,z);
+                verts.push(1,1,1,1);
+                verts.push(subdiv/subdivs, layer/subdivs)
+            }
+
+            if (layer === 0) {continue;}
+
+            let prev = (layer-1)*(subdivs+1);
+            for ( let offset = prev; offset < prev+subdivs; offset++ ) {
+                indis.push(
+                    offset, offset + subdivs + 1, offset + subdivs + 2,
+                    offset + subdivs + 2, offset + 1, offset
+                )
+            }
+        }
+
+        console.log(verts);
+        console.log(indis);
+
+        return new Mesh( gl, program, verts, indis );
+    }
 
 
     /**
@@ -218,3 +258,11 @@ class Mesh {
         request.send();                   // execute request
     }
 }
+
+function reduce(value) {
+    const min = Math.pow(6.12, -14);
+    if (Math.abs(value) < min)
+      return 0;
+    else
+      return value;
+  }
