@@ -118,28 +118,31 @@ class Mesh {
         let verts = []
         let indis = []
 
+        // for each layer in the y direction
         for (let layer = 0; layer <= subdivs; layer++) {
             let y_turns = layer / subdivs / 2; 
             let y = Math.cos( y_turns * TAU ) / 2;
 
+            // for each subdivision within the y-layer
             for( let subdiv = 0; subdiv <= subdivs; subdiv++ ) {
                 let turns = subdiv / subdivs;
                 let rads = turns * TAU;
             
-                //console.log("layer " + layer + ", subdiv " + subdiv);
+                // need to scale x/z based on radius of circle in y-plane thru sphere
                 let x = reduce(Math.cos( rads ) / 2) * Math.sin( y_turns * TAU );
                 let z = reduce(Math.sin( rads ) / 2) * Math.sin( y_turns * TAU );
 
-                //console.log("x: " + x + ", y: " + y + ", z: " + z);
                 verts.push(x,y,z);
                 verts.push(1,1,1,1);
                 verts.push(subdiv/subdivs, layer/subdivs)
             }
 
+            // skip index winding on first iteration
             if (layer === 0) {continue;}
 
+            // with current layer and previous layer
             let prev = (layer-1)*(subdivs+1);
-            for ( let offset = prev; offset < prev+subdivs; offset++ ) {
+            for ( let offset = prev; offset < (prev + subdivs); offset++ ) {
                 indis.push(
                     offset, offset + subdivs + 1, offset + subdivs + 2,
                     offset + subdivs + 2, offset + 1, offset
