@@ -47,51 +47,17 @@
         <script src = "src/model.js"></script>
         <script src = "src/view.js"></script>
         <script src = "src/projection.js"></script>
+        <script src = "src/material.js"></script>
+        <script src = "src/shaders.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
             
             /** @type {WebGLRenderingContext} */
             let gl = canvas.getContext( 'webgl2' );
-            
-            let vertex_source = 
-            `   #version 300 es
-                precision mediump float;
-
-                uniform mat4 modelview;
-
-                in vec3 coordinates;
-                in vec4 color;
-                in vec2 uv;
-
-                out vec4 v_color;
-                out vec2 v_uv;
-
-                void main( void ) {
-                    gl_Position = modelview * vec4( coordinates, 1.0 );
-                    v_color = color;
-                    v_uv = uv;
-                }
-            `;
-            
-            let fragment_source = 
-            `   #version 300 es
-                precision mediump float;
-
-                uniform sampler2D tex_0;
-
-                in vec4 v_color;
-                in vec2 v_uv;
-
-                out vec4 f_color;
-
-                void main( void ) {
-                    f_color = texture(tex_0, v_uv);
-                }
-            `;
 
             let shader_program = 
-                create_compile_and_link_program( gl, vertex_source, fragment_source );
+                create_compile_and_link_program( gl, Shaders.vertex_source, Shaders.fragment_source );
 
             const input = Keys.start_listening();
             const camera = new View(input);
@@ -105,9 +71,13 @@
             let last_update = performance.now();
             let total_delta = 0;
 
+            let sun_dir = [0.5, 0.5, 0];
+            let sun_color = [1,1,1];
+
             let image = new Image();
             image.src = "textures/metal_scale.png";
             image.onload = on_load;
+            let mat = new Material(.25, 1, 2, 4);
             let sphere = Mesh.uv_sphere(gl, shader_program, 16, 1);
 
             setInterval(update, DESIRED_MSPT);
@@ -122,41 +92,40 @@
                 
                 gl.useProgram( mesh.program );
 
-                let tex = gl.createTexture();
-                gl.bindTexture( gl.TEXTURE_2D, tex );
-                gl.texImage2D(
-                  gl.TEXTURE_2D, 0, gl.RGBA,
-                  256, 256, 0,
-                  gl.RGBA, gl.UNSIGNED_BYTE, 
-                  xor_texture()
-                );
-
-                gl.generateMipmap(gl.TEXTURE_2D);
+                mat.load_material(gl, mesh.program);
                 
                 const sampler_loc = gl.getUniformLocation( mesh.program, "tex_0" );
                 gl.uniform1i( sampler_loc, 0 ); 
 
-                //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
+                set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir);
 
                 set_vertex_attrib_to_buffer( 
                   gl, mesh.program, 
                   "coordinates", 
                   mesh.verts, 3, 
-                  gl.FLOAT, false, VERTEX_STRIDE, 0 
+                  gl.FLOAT, false, UV_VERTEX_STRIDE, 0 
                 );
 
                 set_vertex_attrib_to_buffer( 
                   gl, mesh.program, 
                   "color", 
                   mesh.verts, 4, 
-                  gl.FLOAT, false, VERTEX_STRIDE, 12
+                  gl.FLOAT, false, UV_VERTEX_STRIDE, 12
                 );
 
                 set_vertex_attrib_to_buffer(
                   gl, mesh.program,
                   "uv",
                   mesh.verts, 2,
-                  gl.FLOAT, false, VERTEX_STRIDE, 28
+                  gl.FLOAT, false, UV_VERTEX_STRIDE, 28
+                )
+
+                set_vertex_attrib_to_buffer(
+                  gl, mesh.program,
+                  "normal",
+                  mesh.verts, 3,
+                  gl.FLOAT, false, UV_VERTEX_STRIDE, 36
                 )
 
                 set_render_params( gl );
@@ -176,6 +145,9 @@
                 let view = camera.getView();
                 let modelview = view.mul(model);
 
+                let pos = [camera.x, camera.y, camera.z];
+                set_uniform_vector3(gl, shader_program, "camera_pos", pos);
+                
                 let frustum = projection.getFrustum();
                 let final = frustum.mul(modelview);
 

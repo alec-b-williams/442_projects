@@ -168,3 +168,13 @@ function set_uniform_matrix4(gl, program, name, data) {
   const loc = gl.getUniformLocation(program, name);
   gl.uniformMatrix4fv(loc, true, data);
 }
+
+function set_uniform_scalar(gl, program, name, data) {
+  const loc = gl.getUniformLocation(program, name);
+  gl.uniform1f(loc, data);
+}
+
+function set_uniform_vector3(gl, program, name, data) {
+  const loc = gl.getUniformLocation(program, name);
+  gl.uniform3fv(loc, data);
+}

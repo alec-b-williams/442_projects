@@ -135,12 +135,12 @@ class Mesh {
                 verts.push(x,y,z);
                 verts.push(1,1,1,1);
                 verts.push(subdiv/subdivs, layer/subdivs)
+                verts.push(x,y,z);
             }
 
-            // skip index winding on first iteration
             if (layer === 0) {continue;}
 
-            // with current layer and previous layer
+            // generate indis with current layer and previous layer
             let prev = (layer-1)*(subdivs+1);
             for ( let offset = prev; offset < (prev + subdivs); offset++ ) {
                 indis.push(
@@ -149,9 +149,6 @@ class Mesh {
                 )
             }
         }
-
-        console.log(verts);
-        console.log(indis);
 
         return new Mesh( gl, program, verts, indis );
     }
