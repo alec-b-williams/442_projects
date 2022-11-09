@@ -66,19 +66,23 @@
             const DESIRED_TICK_RATE = 60;
             const DESIRED_MSPT = 1000 / DESIRED_TICK_RATE;
 
-            let cube_dist = 0;
-
             let last_update = performance.now();
             let total_delta = 0;
 
-            let sun_dir = [0.5, 0.5, 0];
-            let sun_color = [1,1,1];
+            let sun_dir = [1, 0, 0];
+            let sun_color = [1,1,.85];
+
+            let light_dist = 1;
+
+            let point_pos = [-1, -1, 0];
+            let point_color = [1,.25,.25];
+            let point_linear_scale = 1.5;
 
             let image = new Image();
             image.src = "textures/metal_scale.png";
             image.onload = on_load;
             let mat = new Material(.25, 1, 2, 4);
-            let sphere = Mesh.uv_sphere(gl, shader_program, 16, 1);
+            let sphere = Mesh.uv_sphere(gl, shader_program, 32, 1);
 
             setInterval(update, DESIRED_MSPT);
             initRenderSettings(sphere);
@@ -96,9 +100,14 @@
                 
                 const sampler_loc = gl.getUniformLocation( mesh.program, "tex_0" );
                 gl.uniform1i( sampler_loc, 0 ); 
-
-                set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
+                
                 set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir);
+                set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
+
+                set_uniform_vector3(gl, mesh.program, "point_pos", point_pos);
+                set_uniform_vector3(gl, mesh.program, "point_color", point_color);
+
+                set_uniform_scalar(gl, mesh.program, "linear_scale", point_linear_scale)
 
                 set_vertex_attrib_to_buffer( 
                   gl, mesh.program, 
@@ -138,6 +147,13 @@
                 last_update = now;
                 total_delta += time_delta
 
+                /*point_x = Math.cos(total_delta) * -light_dist;
+                point_y = Math.sin(total_delta) * -light_dist;
+                point_z = Math.cos(total_delta) * -light_dist;
+                point_pos = [-light_dist, point_y, point_z];*/
+                point_pos = [-light_dist, -light_dist, 0];
+                set_uniform_vector3(gl, mesh.program, "point_pos", point_pos);
+
                 let transform = Mat4.translation(0, 0, 0);
                 let xz_rotation = Model.getXZRotation(0);
                 let model = transform.mul(xz_rotation);
@@ -172,7 +188,7 @@
             }
 
             function update_dist(n) {
-              cube_dist += n;
+              light_dist += n;
             }
 
             function toggle_inversion() {
@@ -181,7 +197,7 @@
 
             function update_labels() {
               document.getElementById("fov_label").textContent = "FoV: " + projection.fov;
-              document.getElementById("dist_label").textContent = "Dist: " + cube_dist.toFixed(1);
+              document.getElementById("dist_label").textContent = "Dist: " + light_dist.toFixed(1);
               document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
               document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
               document.getElementById("inversion_label").textContent = " look inversion: " + (camera.inversion == 1 ? "true" : "false")
