@@ -174,6 +174,16 @@ function set_uniform_scalar(gl, program, name, data) {
   gl.uniform1f(loc, data);
 }
 
+function set_uniform_int(gl, program, name, data) {
+  const loc = gl.getUniformLocation(program, name);
+  gl.uniform1i(loc, data);
+}
+
+function set_uniform_scalar_array(gl, program, name, data) {
+  const loc = gl.getUniformLocation(program, name);
+  gl.uniform1fv(loc, data);
+}
+
 function set_uniform_vector3(gl, program, name, data) {
   const loc = gl.getUniformLocation(program, name);
   gl.uniform3fv(loc, data);

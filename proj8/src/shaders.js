@@ -27,6 +27,7 @@ class Shaders {
 
   static fragment_source = 
     `#version 300 es
+    #define MAX_LIGHT 3
     precision mediump float;
 
     uniform sampler2D tex_0;
@@ -41,8 +42,9 @@ class Shaders {
     uniform vec3 sun_dir;
     uniform vec3 sun_color;
 
-    uniform vec3 point_pos;
-    uniform vec3 point_color;
+    uniform int size;
+    uniform float a_point_pos[MAX_LIGHT * 3];
+    uniform float a_point_color[MAX_LIGHT * 3];
     uniform float linear_scale;
 
     in vec3 v_pos;
@@ -97,16 +99,27 @@ class Shaders {
                                              coords_tx, mat_specular, mat_shininess), 1.0 );
       vec4 dir_color = ambient_color + diffuse_color + specular_color;
 
-      vec3 v_point_pos =  mat3( modelview ) * point_pos;
-      float attenuation = 1.0 / (linear_scale * distance(v_pos, point_pos));
-
       // color from point light(s)
-      diffuse_color = vec4( diff_color(v_normal, v_point_pos, point_color, mat_diffuse), 1.0 );
-      specular_color = vec4( spec_color(v_normal, v_point_pos, point_color, 
-                                        coords_tx, mat_specular, mat_shininess), 1.0 );
-      vec4 point_color = (diffuse_color + specular_color) * attenuation;
+      
 
-      vec4 mat_color = dir_color + point_color;
+      vec4 total_point_color = vec4(0.0, 0.0, 0.0, 0.0);
+      
+      for (int i = 0; i < size; i++) {
+        int index = i * 3;
+        vec3 point_pos = vec3(a_point_pos[index], a_point_pos[index+1], a_point_pos[index+2]);
+        vec3 point_color = vec3(a_point_color[index], a_point_color[index+1], a_point_color[index+2]);
+        //vec3 point_pos = vec3(-1,-1,0);
+        //vec3 point_color = vec3(1,.25,.25);
+
+        vec3 v_point_pos =  mat3( modelview ) * point_pos;
+        float attenuation = 1.0 / (linear_scale * distance(v_pos, point_pos));
+        diffuse_color = vec4( diff_color(v_normal, v_point_pos, point_color, mat_diffuse), 1.0 );
+        specular_color = vec4( spec_color(v_normal, v_point_pos, point_color, 
+                                        coords_tx, mat_specular, mat_shininess), 1.0 );
+        total_point_color += (diffuse_color + specular_color) * attenuation;
+      }
+      
+      vec4 mat_color = dir_color + total_point_color;
 
       f_color = texture(tex_0, v_uv) * mat_color;
       //f_color = v_color * mat_color;

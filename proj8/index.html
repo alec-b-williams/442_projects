@@ -31,7 +31,7 @@
         <span id="keys_label"></span>
         <br>
         <button onclick="toggle_inversion()">toggle</button><span id="inversion_label"></span><br>
-        <button onclick="toggle_fun()">toggle</button><span id="fun_label"></span><br>
+        <button onclick="toggle_fun()">toggle</button><span style="color:yellow;font-size:xx-large;" id="fun_label"></span><br>
         <span>Camera Position:</span><br>
         <span id="cam_x_label"></span><br>
         <span id="cam_y_label"></span><br>
@@ -50,6 +50,7 @@
         <script src = "src/projection.js"></script>
         <script src = "src/material.js"></script>
         <script src = "src/shaders.js"></script>
+        <script src = "src/doc_util.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
@@ -77,13 +78,20 @@
             let fun = false;
 
             let point_pos = [-1, -1, 0];
-            let point_color = [1,.25,.25];
+            let point_color = [
+                  1,.25,.25,  // red light
+                  .25,1,.25,  // green light
+                  .25,.25,1,  // blue light
+                ];
             let point_linear_scale = 1.5;
 
-            let image = new Image();
-            image.src = "textures/metal_scale.png";
-            //image.src = "textures/earth.jpg"
-            image.onload = on_load;
+            let metal_image = new Image();
+            metal_image.src = "textures/metal_scale.png";
+            metal_image.onload = on_load;
+
+            let earth_image = new Image();
+            earth_image.src = "textures/earth.jpg"
+
             let mat = new Material(.25, 1, 2, 4);
             let sphere = Mesh.uv_sphere(gl, shader_program, 32, 1);
 
@@ -107,9 +115,9 @@
                 set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir);
                 set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
 
-                set_uniform_vector3(gl, mesh.program, "point_pos", point_pos);
-                set_uniform_vector3(gl, mesh.program, "point_color", point_color);
-
+                set_uniform_int(gl, mesh.program, "size", 1);
+                set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
+                set_uniform_scalar_array(gl, mesh.program, "a_point_color", point_color);
                 set_uniform_scalar(gl, mesh.program, "linear_scale", point_linear_scale)
 
                 set_vertex_attrib_to_buffer( 
@@ -150,15 +158,32 @@
                 last_update = now;
                 total_delta += time_delta
 
-                /*point_x = Math.cos(total_delta) * -light_dist;
-                point_y = Math.sin(total_delta) * -light_dist;
-                point_z = Math.cos(total_delta) * -light_dist;
-                point_pos = [-light_dist, point_y, point_z];*/
-                point_pos = [-light_dist, -light_dist, 0];
-                set_uniform_vector3(gl, mesh.program, "point_pos", point_pos);
+                //optionally update point light position
+                if (fun) {
+                  point_y1 = Math.sin(total_delta*2) * -light_dist;
+                  point_z1 = Math.cos(total_delta*2) * -light_dist;
 
-                set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(total_delta).data);
+                  point_y2 = Math.sin(total_delta*2 + (2/3*Math.PI)) * -light_dist;
+                  point_z2 = Math.cos(total_delta*2 + (2/3*Math.PI)) * -light_dist;
 
+                  point_y3 = Math.sin(total_delta*2 + (4/3*Math.PI)) * -light_dist;
+                  point_z3 = Math.cos(total_delta*2 + (4/3*Math.PI)) * -light_dist;
+
+                  point_pos = [
+                    -light_dist, point_y1, point_z1,
+                    -light_dist, point_y2, point_z2,
+                    -light_dist, point_y3, point_z3,
+                  ];
+                  set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
+
+                  set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(total_delta/2).data);
+                } else {
+                  point_pos = [-light_dist, -light_dist, 0];
+                  set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
+
+                  set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(0).data);
+                }
+                
                 let transform = Mat4.translation(0, 0, 0);
                 let xz_rotation = Model.getXZRotation(0);
                 let model = transform.mul(xz_rotation);
@@ -190,57 +215,6 @@
               camera.update(DESIRED_MSPT);
               projection.update(DESIRED_MSPT);
               update_labels();
-            }
-
-            function update_dist(n) {
-              light_dist += n;
-            }
-
-            function toggle_inversion() {
-              camera.inversion *= -1;
-            }
-
-            function toggle_fun() {
-              fun = !fun;
-            }
-
-            function update_labels() {
-              document.getElementById("fov_label").textContent = "FoV: " + projection.fov;
-              document.getElementById("dist_label").textContent = "Dist: " + light_dist.toFixed(1);
-              document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
-              document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
-              document.getElementById("inversion_label").textContent = " look inversion: " + (camera.inversion == 1 ? "true" : "false")
-              document.getElementById("fun_label").textContent = " fun: " + (fun ? "true" : "false")
-              document.getElementById("cam_x_label").textContent = "x: " + camera.x.toFixed(2);
-              document.getElementById("cam_y_label").textContent = "y: " + camera.y.toFixed(2);
-              document.getElementById("cam_z_label").textContent = "z: " + camera.z.toFixed(2);
-              document.getElementById("cam_roll_label").textContent = "roll: " + (camera.roll*360).toFixed(1);
-              document.getElementById("cam_pitch_label").textContent = "pitch: " + (camera.pitch*360).toFixed(1)
-              document.getElementById("cam_yaw_label").textContent = "yaw: " + (camera.yaw*360).toFixed(1)
-            }
-
-            function xor_texture() {
-              let data = new Array( 256 * 256 * 4 );
-              let width = 256;
-              for( let row = 0; row < width; row++ ) {
-                for( let col = 0; col < width; col++ ) {
-                  let pix = ( row * width + col ) * 4;
-                  data[pix] = data[pix + 1] = data[pix + 2] = row ^ col;
-                  data[pix + 3] = 255;
-                }
-              }
-
-              return new Uint8Array( data );
-            }
-
-            function on_load() {
-              gl.texImage2D(
-                gl.TEXTURE_2D, 0, gl.RGBA,
-                  gl.RGBA, gl.UNSIGNED_BYTE, this 
-              );
-
-              gl.generateMipmap(gl.TEXTURE_2D);
-              gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             }
 
         </script>
