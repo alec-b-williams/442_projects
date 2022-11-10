@@ -31,6 +31,7 @@
         <span id="keys_label"></span>
         <br>
         <button onclick="toggle_inversion()">toggle</button><span id="inversion_label"></span><br>
+        <button onclick="toggle_fun()">toggle</button><span id="fun_label"></span><br>
         <span>Camera Position:</span><br>
         <span id="cam_x_label"></span><br>
         <span id="cam_y_label"></span><br>
@@ -73,6 +74,7 @@
             let sun_color = [1,1,.85];
 
             let light_dist = 1;
+            let fun = false;
 
             let point_pos = [-1, -1, 0];
             let point_color = [1,.25,.25];
@@ -80,6 +82,7 @@
 
             let image = new Image();
             image.src = "textures/metal_scale.png";
+            //image.src = "textures/earth.jpg"
             image.onload = on_load;
             let mat = new Material(.25, 1, 2, 4);
             let sphere = Mesh.uv_sphere(gl, shader_program, 32, 1);
@@ -154,6 +157,8 @@
                 point_pos = [-light_dist, -light_dist, 0];
                 set_uniform_vector3(gl, mesh.program, "point_pos", point_pos);
 
+                set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(total_delta).data);
+
                 let transform = Mat4.translation(0, 0, 0);
                 let xz_rotation = Model.getXZRotation(0);
                 let model = transform.mul(xz_rotation);
@@ -195,12 +200,17 @@
               camera.inversion *= -1;
             }
 
+            function toggle_fun() {
+              fun = !fun;
+            }
+
             function update_labels() {
               document.getElementById("fov_label").textContent = "FoV: " + projection.fov;
               document.getElementById("dist_label").textContent = "Dist: " + light_dist.toFixed(1);
               document.getElementById("near_label").textContent = "z-near: " + projection.z_near.toFixed(2);
               document.getElementById("keys_label").textContent = "keys: " + input.keys_down_list().join(", ");
               document.getElementById("inversion_label").textContent = " look inversion: " + (camera.inversion == 1 ? "true" : "false")
+              document.getElementById("fun_label").textContent = " fun: " + (fun ? "true" : "false")
               document.getElementById("cam_x_label").textContent = "x: " + camera.x.toFixed(2);
               document.getElementById("cam_y_label").textContent = "y: " + camera.y.toFixed(2);
               document.getElementById("cam_z_label").textContent = "z: " + camera.z.toFixed(2);

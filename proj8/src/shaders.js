@@ -4,6 +4,7 @@ class Shaders {
     precision mediump float;
 
     uniform mat4 modelview;
+    uniform mat4 spin;
 
     in vec3 coordinates;
     in vec4 color;
@@ -16,11 +17,11 @@ class Shaders {
     out vec3 v_normal;
 
     void main( void ) {
-        gl_Position = modelview * vec4( coordinates, 1.0 );
+        gl_Position = modelview * spin * vec4( coordinates, 1.0 );
         v_pos = coordinates;
         v_color = color;
         v_uv = uv;
-        v_normal = normalize( mat3( modelview ) * normal );
+        v_normal = normalize( mat3( modelview ) * mat3(spin) * normal );
     }
   `;
 
@@ -96,10 +97,10 @@ class Shaders {
                                              coords_tx, mat_specular, mat_shininess), 1.0 );
       vec4 dir_color = ambient_color + diffuse_color + specular_color;
 
-      
       vec3 v_point_pos =  mat3( modelview ) * point_pos;
       float attenuation = 1.0 / (linear_scale * distance(v_pos, point_pos));
 
+      // color from point light(s)
       diffuse_color = vec4( diff_color(v_normal, v_point_pos, point_color, mat_diffuse), 1.0 );
       specular_color = vec4( spec_color(v_normal, v_point_pos, point_color, 
                                         coords_tx, mat_specular, mat_shininess), 1.0 );
