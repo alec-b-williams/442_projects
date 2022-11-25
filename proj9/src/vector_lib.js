@@ -96,4 +96,8 @@ class Vec4 {
 	toString() {
 		return [ '[', this.x, this.y, this.z, this.w, ']' ].join( ' ' );
 	}
+
+  get_data() {
+    return [ this.x, this.y, this.z ];
+  }
 }

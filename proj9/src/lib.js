@@ -18,7 +18,6 @@ function create_and_load_vertex_buffer(gl, data, usage) {
     
     gl.bindBuffer( gl.ARRAY_BUFFER, current_array_buf );
 
-    console.log("loaded vertex buffer")
     return buf_id;
 }
 
@@ -31,7 +30,6 @@ function create_and_load_elements_buffer(gl, data, usage) {
   
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, current_array_buf );
 
-  console.log("loaded elements buffer")
   return buf_id;
 }
 

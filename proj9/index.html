@@ -51,6 +51,7 @@
         <script src = "src/material.js"></script>
         <script src = "src/shaders.js"></script>
         <script src = "src/doc_util.js"></script>
+        <script src = "src/node.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
@@ -71,7 +72,7 @@
             let last_update = performance.now();
             let total_delta = 0;
 
-            let sun_dir = [1, 0, 0];
+            let sun_dir = (new Vec4(1,0,0,0)).norm();
             let sun_color = [1,1,.85];
 
             let light_dist = 1;
@@ -83,20 +84,18 @@
                   .25,1,.25,  // green light
                   .25,.25,1,  // blue light
                 ];
-            let point_linear_scale = 1.5;
+            let point_linear_scale = 1.2;
 
             let metal_image = new Image();
             metal_image.src = "textures/metal_scale.png";
             metal_image.onload = on_load;
 
-            let earth_image = new Image();
-            earth_image.src = "textures/earth.jpg"
-
             let mat = new Material(.25, 1, 2, 4);
-            let sphere = Mesh.uv_sphere(gl, shader_program, 32, 1);
+            let sphere1 = Mesh.uv_sphere(gl, shader_program, 32);
+            //let sphere2 = Mesh.uv_sphere(gl, shader_program, 32, 0,0,0);
 
             setInterval(update, DESIRED_MSPT);
-            initRenderSettings(sphere);
+            initRenderSettings(sphere1);
             requestAnimationFrame(render);
 
             function initRenderSettings(mesh) {
@@ -112,41 +111,13 @@
                 const sampler_loc = gl.getUniformLocation( mesh.program, "tex_0" );
                 gl.uniform1i( sampler_loc, 0 ); 
                 
-                set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir);
+                set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir.get_data());
                 set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
 
                 set_uniform_int(gl, mesh.program, "size", 1);
                 set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
                 set_uniform_scalar_array(gl, mesh.program, "a_point_color", point_color);
                 set_uniform_scalar(gl, mesh.program, "linear_scale", point_linear_scale)
-
-                set_vertex_attrib_to_buffer( 
-                  gl, mesh.program, 
-                  "coordinates", 
-                  mesh.verts, 3, 
-                  gl.FLOAT, false, UV_VERTEX_STRIDE, 0 
-                );
-
-                set_vertex_attrib_to_buffer( 
-                  gl, mesh.program, 
-                  "color", 
-                  mesh.verts, 4, 
-                  gl.FLOAT, false, UV_VERTEX_STRIDE, 12
-                );
-
-                set_vertex_attrib_to_buffer(
-                  gl, mesh.program,
-                  "uv",
-                  mesh.verts, 2,
-                  gl.FLOAT, false, UV_VERTEX_STRIDE, 28
-                )
-
-                set_vertex_attrib_to_buffer(
-                  gl, mesh.program,
-                  "normal",
-                  mesh.verts, 3,
-                  gl.FLOAT, false, UV_VERTEX_STRIDE, 36
-                )
 
                 set_render_params( gl );
             }
@@ -158,31 +129,8 @@
                 last_update = now;
                 total_delta += time_delta
 
-                //optionally update point light position
-                if (fun) {
-                  point_y1 = Math.sin(total_delta*2) * -light_dist;
-                  point_z1 = Math.cos(total_delta*2) * -light_dist;
-
-                  point_y2 = Math.sin(total_delta*2 + (2/3*Math.PI)) * -light_dist;
-                  point_z2 = Math.cos(total_delta*2 + (2/3*Math.PI)) * -light_dist;
-
-                  point_y3 = Math.sin(total_delta*2 + (4/3*Math.PI)) * -light_dist;
-                  point_z3 = Math.cos(total_delta*2 + (4/3*Math.PI)) * -light_dist;
-
-                  point_pos = [
-                    -light_dist, point_y1, point_z1,
-                    -light_dist, point_y2, point_z2,
-                    -light_dist, point_y3, point_z3,
-                  ];
-                  set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
-
-                  set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(total_delta/2).data);
-                } else {
-                  point_pos = [-light_dist, -light_dist, 0];
-                  set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
-
-                  set_uniform_matrix4(gl, mesh.program, "spin", Model.getXZRotation(0).data);
-                }
+                point_pos = [-1, -1, 0];
+                set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
                 
                 let transform = Mat4.translation(0, 0, 0);
                 let xz_rotation = Model.getXZRotation(0);
@@ -194,21 +142,53 @@
                 let pos = [camera.x, camera.y, camera.z];
                 set_uniform_vector3(gl, shader_program, "camera_pos", pos);
                 
-                let frustum = projection.getFrustum();
-                let final = frustum.mul(modelview);
+                let proj = projection.getFrustum();
+                //let final = frustum.mul(modelview);
 
                 gl.clear( gl.COLOR_BUFFER_BIT );
 
-                draw(final);
+                draw(model, view, modelview, proj, sphere1);
+                //draw(model, view, modelview, proj, sphere2);
             }
 
-            function draw(model) {
-              gl.bindBuffer( gl.ARRAY_BUFFER, this.mesh.verts );
-              gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, this.mesh.indis );
+            function draw( model, view, modelview, projection, mesh ) {
+              set_vertex_attrib_to_buffer( 
+                gl, mesh.program, 
+                "coordinates", 
+                mesh.verts, 3, 
+                gl.FLOAT, false, UV_VERTEX_STRIDE, 0 
+              );
 
-              set_uniform_matrix4(gl, shader_program, "modelview", model.data);
+              set_vertex_attrib_to_buffer( 
+                gl, mesh.program, 
+                "color", 
+                mesh.verts, 4, 
+                gl.FLOAT, false, UV_VERTEX_STRIDE, 12
+              );
 
-              gl.drawElements( gl.TRIANGLES, this.mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
+              set_vertex_attrib_to_buffer(
+                gl, mesh.program,
+                "uv",
+                mesh.verts, 2,
+                gl.FLOAT, false, UV_VERTEX_STRIDE, 28
+              )
+
+              set_vertex_attrib_to_buffer(
+                gl, mesh.program,
+                "normal",
+                mesh.verts, 3,
+                gl.FLOAT, false, UV_VERTEX_STRIDE, 36
+              )
+
+              gl.bindBuffer( gl.ARRAY_BUFFER, mesh.verts );
+              gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indis );
+              
+              set_uniform_matrix4(gl, shader_program, "model", model.data);
+              set_uniform_matrix4(gl, shader_program, "view", view.data);
+              set_uniform_matrix4(gl, shader_program, "modelview", modelview.data);
+              set_uniform_matrix4(gl, shader_program, "projection", projection.data);
+
+              gl.drawElements( gl.TRIANGLES, mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
             }
 
             function update() {
@@ -217,6 +197,13 @@
               update_labels();
             }
 
+            function generate_render_jobs( parent_matrix, node, jobs ) {
+              let matrix = parent_matrix.mul( node.get_matrix() );
+              
+              if( this.data != null ) { 
+                jobs.push( new RenderMesh( matrix, this.data ) );
+              }
+            }
         </script>
     </body>
 </html>
