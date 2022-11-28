@@ -1,7 +1,8 @@
 class RenderMesh {
-  constructor(matrix, mesh) {
+  constructor(matrix, mesh, mat) {
     this.matrix = matrix;
     this.mesh = mesh;
+    this.mat = mat;
   }
 }
 

@@ -143,12 +143,24 @@
                 set_uniform_vector3(gl, shader_program, "camera_pos", pos);
                 
                 let proj = projection.getFrustum();
-                //let final = frustum.mul(modelview);
-
+                
                 gl.clear( gl.COLOR_BUFFER_BIT );
+
+                let jobs = [];
+                let lights = [];
+                //generate_render_jobs( new Mat4, root, jobs, lights );
+
+                for ( let light of lights ) {
+                  // load lights into scene
+                }
+
+                for( let job of jobs ) {
+                  // render the RenderMesh job
+                }
 
                 draw(model, view, modelview, proj, sphere1);
                 //draw(model, view, modelview, proj, sphere2);
+                
             }
 
             function draw( model, view, modelview, projection, mesh ) {
@@ -202,6 +214,10 @@
               
               if( this.data != null ) { 
                 jobs.push( new RenderMesh( matrix, this.data ) );
+              }
+
+              for( let child of this.children ) {
+                generate_render_jobs( matrix, child, jobs );
               }
             }
         </script>
