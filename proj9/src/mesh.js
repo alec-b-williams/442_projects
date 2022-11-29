@@ -114,7 +114,7 @@ class Mesh {
       return new Mesh( gl, program, verts, indis );
     }
 
-    static uv_sphere(gl, program, subdivs) {
+    static uv_sphere(gl, program, subdivs, mat) {
         let verts = []
         let indis = []
 
@@ -150,7 +150,9 @@ class Mesh {
             }
         }
 
-        return new Mesh( gl, program, verts, indis );
+        let mesh = new Mesh( gl, program, verts, indis );
+        mesh.material = mat;
+        return mesh;
     }
 
 

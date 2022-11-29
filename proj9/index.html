@@ -52,6 +52,7 @@
         <script src = "src/shaders.js"></script>
         <script src = "src/doc_util.js"></script>
         <script src = "src/node.js"></script>
+        <script src = "src/render.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
@@ -78,92 +79,100 @@
             let light_dist = 1;
             let fun = false;
 
-            let point_pos = [-1, -1, 0];
-            let point_color = [
-                  1,.25,.25,  // red light
-                  .25,1,.25,  // green light
-                  .25,.25,1,  // blue light
-                ];
             let point_linear_scale = 1.2;
 
             let metal_image = new Image();
-            metal_image.src = "textures/metal_scale.png";
+            metal_image.src = "textures/earth.jpg";
             metal_image.onload = on_load;
 
-            let mat = new Material(.25, 1, 2, 4);
-            let sphere1 = Mesh.uv_sphere(gl, shader_program, 32);
-            //let sphere2 = Mesh.uv_sphere(gl, shader_program, 32, 0,0,0);
+            let root = new Node();
+
+            let sphere = root.add_child();
+            sphere.move_right(1);
+            sphere.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+
+            let baby_sphere = sphere.add_child();
+            baby_sphere.scale = new Vec4(.25,.25,.25,1);
+            baby_sphere.move_right(.75);
+            baby_sphere.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+
+            let other_sphere = root.add_child();
+            other_sphere.move_left(1);
+            other_sphere.data = Mesh.uv_sphere(gl, shader_program, 8, new Material(.25, 1, 2, 4));
 
             setInterval(update, DESIRED_MSPT);
-            initRenderSettings(sphere1);
+
+            gl.cullFace( gl.BACK );
+            gl.enable( gl.CULL_FACE );
+            
+            gl.useProgram( shader_program );
+
+            let tex = gl.createTexture();
+            gl.bindTexture( gl.TEXTURE_2D, tex );
+
+            gl.texImage2D(
+              gl.TEXTURE_2D, 0, gl.RGBA,
+              256, 256, 0,
+              gl.RGBA, gl.UNSIGNED_BYTE, 
+              xor_texture()
+            );
+
+            gl.generateMipmap(gl.TEXTURE_2D);
+            
+            const sampler_loc = gl.getUniformLocation( shader_program, "tex_0" );
+            gl.uniform1i( sampler_loc, 0 ); 
+            
+            set_uniform_vector3(gl, shader_program, "sun_dir", sun_dir.get_data());
+            set_uniform_vector3(gl, shader_program, "sun_color", sun_color);
+
+            set_uniform_int(gl, shader_program, "size", 0);
+            //set_uniform_scalar_array(gl, shader_program, "a_point_pos", point_pos);
+            //set_uniform_scalar_array(gl, shader_program, "a_point_color", point_color);
+            set_uniform_scalar(gl, shader_program, "linear_scale", point_linear_scale)
+
+            set_render_params( gl );
+            
             requestAnimationFrame(render);
 
-            function initRenderSettings(mesh) {
-                this.mesh = mesh;
-
-                gl.cullFace( gl.BACK );
-                gl.enable( gl.CULL_FACE );
-                
-                gl.useProgram( mesh.program );
-
-                mat.load_material(gl, mesh.program);
-                
-                const sampler_loc = gl.getUniformLocation( mesh.program, "tex_0" );
-                gl.uniform1i( sampler_loc, 0 ); 
-                
-                set_uniform_vector3(gl, mesh.program, "sun_dir", sun_dir.get_data());
-                set_uniform_vector3(gl, mesh.program, "sun_color", sun_color);
-
-                set_uniform_int(gl, mesh.program, "size", 1);
-                set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
-                set_uniform_scalar_array(gl, mesh.program, "a_point_color", point_color);
-                set_uniform_scalar(gl, mesh.program, "linear_scale", point_linear_scale)
-
-                set_render_params( gl );
-            }
-
             function render(now) {
-                requestAnimationFrame(render);
+              requestAnimationFrame(render);
 
-                let time_delta = ( now - last_update ) / 1000;
-                last_update = now;
-                total_delta += time_delta
+              let time_delta = ( now - last_update ) / 1000;
+              last_update = now;
+              total_delta += time_delta
 
-                point_pos = [-1, -1, 0];
-                set_uniform_scalar_array(gl, mesh.program, "a_point_pos", point_pos);
-                
-                let transform = Mat4.translation(0, 0, 0);
-                let xz_rotation = Model.getXZRotation(0);
-                let model = transform.mul(xz_rotation);
+              point_pos = [-1, -1, 0];
+              set_uniform_scalar_array(gl, shader_program, "a_point_pos", point_pos);
+              
+              let transform = Mat4.translation(0, 0, 0);
+              let xz_rotation = Model.getXZRotation(0);
+              let model = transform.mul(xz_rotation);
 
-                let view = camera.getView();
-                let modelview = view.mul(model);
+              root.yaw_left(0.001);
+              sphere.yaw_left(0.001);
 
-                let pos = [camera.x, camera.y, camera.z];
-                set_uniform_vector3(gl, shader_program, "camera_pos", pos);
-                
-                let proj = projection.getFrustum();
-                
-                gl.clear( gl.COLOR_BUFFER_BIT );
+              let view = camera.getView();
 
-                let jobs = [];
-                let lights = [];
-                //generate_render_jobs( new Mat4, root, jobs, lights );
+              let pos = [camera.x, camera.y, camera.z];
+              set_uniform_vector3(gl, shader_program, "camera_pos", pos);
+              
+              let proj = projection.getFrustum();
+              
+              gl.clear( gl.COLOR_BUFFER_BIT );
 
-                for ( let light of lights ) {
-                  // load lights into scene
-                }
+              let jobs = [];
+              generate_render_jobs( new Mat4, root, jobs);
 
-                for( let job of jobs ) {
-                  // render the RenderMesh job
-                }
+              for ( let light of jobs ) {
+                // load lights into scene
+              }
 
-                draw(model, view, modelview, proj, sphere1);
-                //draw(model, view, modelview, proj, sphere2);
-                
+              for( let job of jobs ) {
+                draw(job.matrix, view.mul(job.matrix), proj, job.mesh);
+              }
             }
 
-            function draw( model, view, modelview, projection, mesh ) {
+            function draw( model, modelview, projection, mesh ) {
               set_vertex_attrib_to_buffer( 
                 gl, mesh.program, 
                 "coordinates", 
@@ -196,9 +205,11 @@
               gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indis );
               
               set_uniform_matrix4(gl, shader_program, "model", model.data);
-              set_uniform_matrix4(gl, shader_program, "view", view.data);
               set_uniform_matrix4(gl, shader_program, "modelview", modelview.data);
               set_uniform_matrix4(gl, shader_program, "projection", projection.data);
+
+              mesh.material.load_material(gl, shader_program);
+              //console.log(mesh);
 
               gl.drawElements( gl.TRIANGLES, mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
             }
@@ -211,12 +222,12 @@
 
             function generate_render_jobs( parent_matrix, node, jobs ) {
               let matrix = parent_matrix.mul( node.get_matrix() );
-              
-              if( this.data != null ) { 
-                jobs.push( new RenderMesh( matrix, this.data ) );
+
+              if( node.data != null ) { 
+                jobs.push( new RenderMesh( matrix, node.data ) );
               }
 
-              for( let child of this.children ) {
+              for( let child of node.children ) {
                 generate_render_jobs( matrix, child, jobs );
               }
             }
