@@ -29,6 +29,21 @@ class Node {
     return matrix;
   }
 
+  update() {
+
+  }
+
+  get_view() {
+    let roll = Mat4.rotation_xy(this.roll);
+    let pitch = Mat4.rotation_yz(this.pitch);
+    let yaw  = Mat4.rotation_xz(this.yaw);
+    let translation = Mat4.translation(this.x, this.y, this.z);
+
+    let view = yaw.mul(pitch).mul(roll);
+    view = translation.mul(view);
+    return view.inverse();
+  }
+
   update_bearing(x, y, z, p, r, ya) {
     this.x += x;
     this.y += y;

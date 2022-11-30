@@ -5,9 +5,15 @@ class RenderMesh {
   }
 }
 
+class Light {
+  constructor(color) {
+    this.color = color;
+  }
+}
+
 class RenderLight {
-  constructor(pos, color) {
-    this.pos = pos;
+  constructor(position, color) {
+    this.position = position;
     this.color = color;
   }
 }

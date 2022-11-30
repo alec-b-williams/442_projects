@@ -15,7 +15,7 @@ class View {
     this.orient = new Mat4();
   }
 
-  getView() {
+  get_view() {
     let roll = Mat4.rotation_xy(this.roll);
     let pitch = Mat4.rotation_yz(this.pitch);
     let yaw  = Mat4.rotation_xz(this.yaw);
@@ -44,7 +44,7 @@ class View {
     this.orient = yaw.mul(pitch).mul(roll);
   }
 
-  update(delta, inversion) {
+  update() {
     let keys = this.input.keys_down_list();
     let x=0, y=0, z=0, p=0, r=0, ya=0;
 

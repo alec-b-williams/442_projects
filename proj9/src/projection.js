@@ -5,7 +5,7 @@ class Projection {
   constructor(input) {
     this.ratio = 8/6;
     this.fov = 90;
-    this.z_near = 0.1;
+    this.z_near = 0.01;
     this.z_far = 1001;
     this.input = input;
   }

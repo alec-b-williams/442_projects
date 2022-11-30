@@ -9,29 +9,12 @@
 
     <body>
         <canvas id = "the-canvas" width = "800" height = "600"></canvas>
-        <br>  
-        <button onclick="projection.set_fov(-5)">--</button>
-        <button onclick="projection.set_fov(-1)">-</button>
+        <br>
         <span id="fov_label"></span>
-        <button onclick="projection.set_fov(1)">+</button>
-        <button onclick="projection.set_fov(5)">++</button>
-        <br>  
-        <button onclick="update_dist(-.5)">--</button>
-        <button onclick="update_dist(-.1)">-</button>
-        <span id="dist_label"></span>
-        <button onclick="update_dist(.1)">+</button>
-        <button onclick="update_dist(.5)">++</button>
-        <br>  
-        <button onclick="projection.set_near(-.05)">--</button>
-        <button onclick="projection.set_near(-.01)">-</button>
-        <span id="near_label"></span>
-        <button onclick="projection.set_near(.01)">+</button>
-        <button onclick="projection.set_near(.05)">++</button>
         <br>
         <span id="keys_label"></span>
         <br>
         <button onclick="toggle_inversion()">toggle</button><span id="inversion_label"></span><br>
-        <button onclick="toggle_fun()">toggle</button><span style="color:yellow;font-size:xx-large;" id="fun_label"></span><br>
         <span>Camera Position:</span><br>
         <span id="cam_x_label"></span><br>
         <span id="cam_y_label"></span><br>
@@ -64,7 +47,7 @@
                 create_compile_and_link_program( gl, Shaders.vertex_source, Shaders.fragment_source );
 
             const input = Keys.start_listening();
-            const camera = new View(input);
+            let camera = new View(input);
             const projection = new Projection(input);
 
             const DESIRED_TICK_RATE = 60;
@@ -91,14 +74,24 @@
             sphere.move_right(1);
             sphere.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
 
-            let baby_sphere = sphere.add_child();
-            baby_sphere.scale = new Vec4(.25,.25,.25,1);
-            baby_sphere.move_right(.75);
-            baby_sphere.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+            let moon = sphere.add_child();
+            moon.scale = new Vec4(.25,.25,.25,1);
+            moon.move_right(.75);
+            moon.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+
+            let light = moon.add_child();
+            light.data = new Light([0.2, 0.8, 0.2]);
 
             let other_sphere = root.add_child();
             other_sphere.move_left(1);
             other_sphere.data = Mesh.uv_sphere(gl, shader_program, 8, new Material(.25, 1, 2, 4));
+
+            let lamp = root.add_child();
+            lamp.data = Mesh.uv_sphere(gl, shader_program, 8, new Material(.25, 1, 2, 4));
+            lamp.scale = new Vec4(.25,.5,.25,1);
+
+            let lamp_light = lamp.add_child();
+            lamp_light.data = new Light([1, .2, .2]);
 
             setInterval(update, DESIRED_MSPT);
 
@@ -126,8 +119,6 @@
             set_uniform_vector3(gl, shader_program, "sun_color", sun_color);
 
             set_uniform_int(gl, shader_program, "size", 0);
-            //set_uniform_scalar_array(gl, shader_program, "a_point_pos", point_pos);
-            //set_uniform_scalar_array(gl, shader_program, "a_point_color", point_color);
             set_uniform_scalar(gl, shader_program, "linear_scale", point_linear_scale)
 
             set_render_params( gl );
@@ -140,9 +131,6 @@
               let time_delta = ( now - last_update ) / 1000;
               last_update = now;
               total_delta += time_delta
-
-              point_pos = [-1, -1, 0];
-              set_uniform_scalar_array(gl, shader_program, "a_point_pos", point_pos);
               
               let transform = Mat4.translation(0, 0, 0);
               let xz_rotation = Model.getXZRotation(0);
@@ -150,8 +138,10 @@
 
               root.yaw_left(0.001);
               sphere.yaw_left(0.001);
+              other_sphere.roll_cw(0.002);
+              other_sphere.yaw_right(0.003);
 
-              let view = camera.getView();
+              let view = camera.get_view();
 
               let pos = [camera.x, camera.y, camera.z];
               set_uniform_vector3(gl, shader_program, "camera_pos", pos);
@@ -161,11 +151,18 @@
               gl.clear( gl.COLOR_BUFFER_BIT );
 
               let jobs = [];
-              generate_render_jobs( new Mat4, root, jobs);
+              let lights = [];
+              generate_render_jobs( new Mat4, root, jobs, lights);
 
-              for ( let light of jobs ) {
-                // load lights into scene
+              let light_coords = [];
+              let light_colors = [];
+              for ( let light of lights ) {
+                light_coords = light_coords.concat(light.position);
+                light_colors = light_colors.concat(light.color);
               }
+              set_uniform_int(gl, shader_program, "size", lights.length);
+              set_uniform_scalar_array(gl, shader_program, "a_point_pos", light_coords);
+              set_uniform_scalar_array(gl, shader_program, "a_point_color", light_colors);
 
               for( let job of jobs ) {
                 draw(job.matrix, view.mul(job.matrix), proj, job.mesh);
@@ -209,26 +206,31 @@
               set_uniform_matrix4(gl, shader_program, "projection", projection.data);
 
               mesh.material.load_material(gl, shader_program);
-              //console.log(mesh);
 
               gl.drawElements( gl.TRIANGLES, mesh.n_indis, gl.UNSIGNED_SHORT, 0 );
             }
 
             function update() {
-              camera.update(DESIRED_MSPT);
+              camera.update();
               projection.update(DESIRED_MSPT);
               update_labels();
             }
 
-            function generate_render_jobs( parent_matrix, node, jobs ) {
+            function generate_render_jobs( parent_matrix, node, jobs, lights ) {
               let matrix = parent_matrix.mul( node.get_matrix() );
 
-              if( node.data != null ) { 
-                jobs.push( new RenderMesh( matrix, node.data ) );
+              if( node.data != null ) {
+                if (node.data.constructor.name == "Light") {
+                  let pos = matrix.transform(node.x,node.y,node.z,1)
+                  lights.push( new RenderLight( [pos.x, pos.y, pos.z], node.data.color));
+                } else {
+                  jobs.push( new RenderMesh( matrix, node.data ) );
+                }
+                
               }
 
               for( let child of node.children ) {
-                generate_render_jobs( matrix, child, jobs );
+                generate_render_jobs( matrix, child, jobs, lights );
               }
             }
         </script>

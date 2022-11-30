@@ -140,7 +140,7 @@ class Mat4 {
 
 	// right multiply by column vector
     transform( x, y, z, w ) {
-        this.transform_vec( new Vec4( x, y, z, w ) );
+      return this.transform_vec( new Vec4( x, y, z, w ) );
     }
 
     transform_vec( vec ) {

@@ -29,7 +29,7 @@ class Shaders {
 
   static fragment_source = 
     `#version 300 es
-    #define MAX_LIGHT 3
+    #define MAX_LIGHT 12
     precision mediump float;
 
     uniform sampler2D tex_0;
