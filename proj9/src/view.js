@@ -5,9 +5,9 @@ class View {
 
   constructor(input) {
     this.x = 0;
-    this.y = 0;
-    this.z = -2;
-    this.pitch = 0;
+    this.y = 4;
+    this.z = -3;
+    this.pitch = -.18;
     this.roll = 0;
     this.yaw = 0;
     this.input = input;
@@ -48,23 +48,29 @@ class View {
     let keys = this.input.keys_down_list();
     let x=0, y=0, z=0, p=0, r=0, ya=0;
 
+    let ts = transform_scale;
+
+    if (keys.includes("ShiftLeft")) {
+      ts *= 3;
+    }
+
     if (keys.includes("KeyA")) {
-      this.move_left(transform_scale);
+      this.move_left(ts);
     }
     if (keys.includes("KeyD")) {
-      this.move_right(transform_scale);
+      this.move_right(ts);
     }
     if (keys.includes("KeyC")) {
-      this.move_down(transform_scale);
+      this.move_down(ts);
     }
     if (keys.includes("Space")) {
-      this.move_up(transform_scale);
+      this.move_up(ts);
     }
     if (keys.includes("KeyS")) {
-      this.move_back(transform_scale);
+      this.move_back(ts);
     }
     if (keys.includes("KeyW")) {
-      this.move_forward(transform_scale);
+      this.move_forward(ts);
     }
     
     if (keys.includes("KeyQ")) {

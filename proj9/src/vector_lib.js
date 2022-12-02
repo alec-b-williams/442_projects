@@ -90,7 +90,7 @@ class Vec4 {
     let y = this.x * other.z - this.z * other.x;
     let z = this.x * other.y - this.y * other.x;
 
-    return new Vec4( x, y, z, 0 ).scaled(-1);
+    return new Vec4( x, y, z, 0 ).scaled(1);
   }
 
   static normal_of_triangle( v_a, v_b, v_c ) {

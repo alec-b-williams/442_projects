@@ -155,7 +155,7 @@ class Mesh {
       return mesh;
     }
 
-    static from_heightmap(gl, program, map, min, max, mat) {
+    static from_heightmap(gl, program, map, min, max, mat, color) {
       const MIN_HEIGHT_COLOR = 0.2;
       let rows = map.length;
       let cols = map[0].length;
@@ -165,14 +165,17 @@ class Mesh {
       let indis = [];
       let indi_start = 0;
 
-      function push_vert( verts, pos, u, v, norm) {
+      function push_vert( verts, pos, u, v, norm, color) {
         function calc_color( height ) {
           let normed_height = height / ( max - min );
           return MIN_HEIGHT_COLOR + normed_height * ( 1 - MIN_HEIGHT_COLOR );
         }
-        let color = calc_color(pos.y);
+
+        let color_scale = calc_color(pos.y);
+        color = color.scaled(color_scale)
+        
         verts.push(pos.x,pos.y,pos.z);
-        verts.push(color,color,color,1);
+        verts.push(color.x,color.y,color.z,1);
         verts.push(u, v)
         verts.push(norm.x,norm.y,norm.z);
       }
@@ -201,14 +204,14 @@ class Mesh {
           v_br.x += col - off_x;
           v_br.z += row - off_z;
 
-          push_vert( verts, v_tl, 0, 1, normal_t1 );
-          push_vert( verts, v_tr, 1, 1, normal_t1 );
-          push_vert( verts, v_bl, 0, 0, normal_t1 );
+          push_vert( verts, v_tl, 0, 1, normal_t1, color );
+          push_vert( verts, v_tr, 1, 1, normal_t1, color );
+          push_vert( verts, v_bl, 0, 0, normal_t1, color );
           
-          push_vert( verts, v_br, 1, 0, normal_t2 );
-          push_vert( verts, v_bl, 0, 0, normal_t2 );
-          push_vert( verts, v_tr, 1, 1, normal_t2 );
-
+          push_vert( verts, v_br, 1, 0, normal_t2, color );
+          push_vert( verts, v_bl, 0, 0, normal_t2, color );
+          push_vert( verts, v_tr, 1, 1, normal_t2, color );
+          
           indis.push(
             indi_start,
             indi_start + 1,
