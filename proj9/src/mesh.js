@@ -115,46 +115,119 @@ class Mesh {
     }
 
     static uv_sphere(gl, program, subdivs, mat) {
-        let verts = []
-        let indis = []
+      let verts = []
+      let indis = []
 
-        // for each layer in the y direction
-        for (let layer = 0; layer <= subdivs; layer++) {
-            let y_turns = layer / subdivs / 2; 
-            let y = Math.cos( y_turns * TAU ) / 2;
+      // for each layer in the y direction
+      for (let layer = 0; layer <= subdivs; layer++) {
+        let y_turns = layer / subdivs / 2; 
+        let y = Math.cos( y_turns * TAU ) / 2;
 
-            // for each subdivision within the y-layer
-            for( let subdiv = 0; subdiv <= subdivs; subdiv++ ) {
-                let turns = subdiv / subdivs;
-                let rads = turns * TAU;
-            
-                // need to scale x/z based on radius of circle in y-plane thru sphere
-                let x = reduce(Math.cos( rads ) / 2) * Math.sin( y_turns * TAU );
-                let z = reduce(Math.sin( rads ) / 2) * Math.sin( y_turns * TAU );
+        // for each subdivision within the y-layer
+        for( let subdiv = 0; subdiv <= subdivs; subdiv++ ) {
+          let turns = subdiv / subdivs;
+          let rads = turns * TAU;
+      
+          // need to scale x/z based on radius of circle in y-plane thru sphere
+          let x = reduce(Math.cos( rads ) / 2) * Math.sin( y_turns * TAU );
+          let z = reduce(Math.sin( rads ) / 2) * Math.sin( y_turns * TAU );
 
-                verts.push(x,y,z);
-                verts.push(1,1,1,1);
-                verts.push(subdiv/subdivs, layer/subdivs)
-                verts.push(x,y,z);
-            }
-
-            if (layer === 0) {continue;}
-
-            // generate indis with current layer and previous layer
-            let prev = (layer-1)*(subdivs+1);
-            for ( let offset = prev; offset < (prev + subdivs); offset++ ) {
-                indis.push(
-                    offset, offset + subdivs + 1, offset + subdivs + 2,
-                    offset + subdivs + 2, offset + 1, offset
-                )
-            }
+          verts.push(x,y,z);
+          verts.push(1,1,1,1);
+          verts.push(subdiv/subdivs, layer/subdivs)
+          verts.push(x,y,z);
         }
 
-        let mesh = new Mesh( gl, program, verts, indis );
-        mesh.material = mat;
-        return mesh;
+        if (layer === 0) {continue;}
+
+        // generate indis with current layer and previous layer
+        let prev = (layer-1)*(subdivs+1);
+        for ( let offset = prev; offset < (prev + subdivs); offset++ ) {
+          indis.push(
+            offset, offset + subdivs + 1, offset + subdivs + 2,
+            offset + subdivs + 2, offset + 1, offset
+          )
+        }
+      }
+
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
     }
 
+    static from_heightmap(gl, program, map, min, max, mat) {
+      const MIN_HEIGHT_COLOR = 0.2;
+      let rows = map.length;
+      let cols = map[0].length;
+      let off_x = (cols / 2.0)-.5;
+      let off_z = (rows / 2.0)-.5;
+      let verts = [];
+      let indis = [];
+      let indi_start = 0;
+
+      function push_vert( verts, pos, u, v, norm) {
+        function calc_color( height ) {
+          let normed_height = height / ( max - min );
+          return MIN_HEIGHT_COLOR + normed_height * ( 1 - MIN_HEIGHT_COLOR );
+        }
+        let color = calc_color(pos.y);
+        verts.push(pos.x,pos.y,pos.z);
+        verts.push(color,color,color,1);
+        verts.push(u, v)
+        verts.push(norm.x,norm.y,norm.z);
+      }
+
+      for( let row = 1; row < rows; row++ ) {
+        for( let col = 1; col < cols; col++ ) {
+          let pos_tl = map[row - 1][col - 1];
+          let pos_tr = map[row - 1][col];
+          let pos_bl = map[row][col - 1];
+          let pos_br = map[row][col];
+
+          let v_tl = new Vec4( -1, pos_tl, -1 );
+          let v_tr = new Vec4( 0, pos_tr, -1 );
+          let v_bl = new Vec4( -1, pos_bl, 0 );
+          let v_br = new Vec4( 0, pos_br, 0 );
+
+          let normal_t1 = Vec4.normal_of_triangle( v_bl, v_tr, v_tl );
+          let normal_t2 = Vec4.normal_of_triangle( v_tr, v_bl, v_br );
+
+          v_tl.x += col - off_x;
+          v_tl.z += row - off_z;
+          v_tr.x += col - off_x;
+          v_tr.z += row - off_z;
+          v_bl.x += col - off_x;
+          v_bl.z += row - off_z;
+          v_br.x += col - off_x;
+          v_br.z += row - off_z;
+
+          push_vert( verts, v_tl, 0, 1, normal_t1 );
+          push_vert( verts, v_tr, 1, 1, normal_t1 );
+          push_vert( verts, v_bl, 0, 0, normal_t1 );
+          
+          push_vert( verts, v_br, 1, 0, normal_t2 );
+          push_vert( verts, v_bl, 0, 0, normal_t2 );
+          push_vert( verts, v_tr, 1, 1, normal_t2 );
+
+          indis.push(
+            indi_start,
+            indi_start + 1,
+            indi_start + 2,
+            indi_start + 3,
+            indi_start + 4,
+            indi_start + 5
+          );
+
+          indi_start += 6;
+        }
+      }
+
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
+    }
+
+    
 
     /**
      * Render the mesh. Does NOT preserve array/index buffer or program bindings! 

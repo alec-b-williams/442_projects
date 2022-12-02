@@ -121,8 +121,8 @@ class Shaders {
       
       vec3 mat_color = dir_color + total_point_color;
 
-      f_color = texture(tex_0, v_uv) * vec4(mat_color, 1.0);
-      //f_color = v_color * vec4(mat_color,1);
+      //f_color = texture(tex_0, v_uv) * vec4(mat_color, 1.0) * v_color;
+      f_color = v_color * vec4(mat_color,1);
       //f_color = texture(tex_0, v_uv);
     }
   `;

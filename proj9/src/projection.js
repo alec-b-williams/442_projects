@@ -22,7 +22,7 @@ class Projection {
     this.z_far += n;
   }
 
-  update(delta) {
+  update() {
     let keys = this.input.keys_down_list();
     
     if (keys.includes("KeyZ")) {

@@ -36,6 +36,7 @@
         <script src = "src/doc_util.js"></script>
         <script src = "src/node.js"></script>
         <script src = "src/render.js"></script>
+        <script src = "src/heightmap.js"></script>
                  
         <script>
             let canvas = document.getElementById( 'the-canvas' );
@@ -56,11 +57,9 @@
             let last_update = performance.now();
             let total_delta = 0;
 
-            let sun_dir = (new Vec4(1,0,0,0)).norm();
+            let sun_dir = (new Vec4(1,1,0,0)).norm();
             let sun_color = [1,1,.85];
-
-            let light_dist = 1;
-            let fun = false;
+            //let sun_color = [0,0,0];
 
             let point_linear_scale = 1.2;
 
@@ -68,26 +67,33 @@
             metal_image.src = "textures/earth.jpg";
             metal_image.onload = on_load;
 
+            let default_mat = new Material(.25, 1, 2, 4);
             let root = new Node();
 
-            let sphere = root.add_child();
-            sphere.move_right(1);
-            sphere.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+            let landscape = root.add_child();
+            landscape.data = Mesh.from_heightmap(gl, shader_program, heightmap, 0, 1, default_mat);
+            landscape.move_down(2);
 
-            let moon = sphere.add_child();
+            let sol = root.add_child();
+
+            let earth = sol.add_child();
+            earth.move_right(1);
+            earth.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
+
+            let moon = earth.add_child();
             moon.scale = new Vec4(.25,.25,.25,1);
             moon.move_right(.75);
-            moon.data = Mesh.uv_sphere(gl, shader_program, 32, new Material(.25, 1, 2, 4));
+            moon.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
 
             let light = moon.add_child();
             light.data = new Light([0.2, 0.8, 0.2]);
 
-            let other_sphere = root.add_child();
+            let other_sphere = sol.add_child();
             other_sphere.move_left(1);
-            other_sphere.data = Mesh.uv_sphere(gl, shader_program, 8, new Material(.25, 1, 2, 4));
+            other_sphere.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
 
-            let lamp = root.add_child();
-            lamp.data = Mesh.uv_sphere(gl, shader_program, 8, new Material(.25, 1, 2, 4));
+            let lamp = sol.add_child();
+            lamp.data = Mesh.uv_sphere(gl, shader_program, 8, default_mat);
             lamp.scale = new Vec4(.25,.5,.25,1);
 
             let lamp_light = lamp.add_child();
@@ -131,15 +137,12 @@
               let time_delta = ( now - last_update ) / 1000;
               last_update = now;
               total_delta += time_delta
-              
-              let transform = Mat4.translation(0, 0, 0);
-              let xz_rotation = Model.getXZRotation(0);
-              let model = transform.mul(xz_rotation);
 
-              root.yaw_left(0.001);
-              sphere.yaw_left(0.001);
+              sol.yaw_left(0.001);
+              earth.yaw_left(0.001);
               other_sphere.roll_cw(0.002);
-              other_sphere.yaw_right(0.003);
+              other_sphere.yaw_right(0.002);
+              lamp.z = Math.sin(total_delta);
 
               let view = camera.get_view();
 
@@ -212,7 +215,7 @@
 
             function update() {
               camera.update();
-              projection.update(DESIRED_MSPT);
+              projection.update();
               update_labels();
             }
 
