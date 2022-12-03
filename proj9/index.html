@@ -69,17 +69,17 @@
             let default_mat = new Material(.25, 1, 2, 4);
             let root = new Node();
 
-            let water = root.add_child();
-            water.data = Mesh.from_heightmap(gl, shader_program, Heightmap.generate_flat(100, 1), 0, 1, default_mat, new Vec4(.3,.3,.8));
-            console.log(water.data);
-            water.move_down(2.49);
-
             let landscape = root.add_child();
             let scale = 6;
             let mid = Math.pow(2, scale-1);
-            landscape.data = Mesh.from_heightmap(gl, shader_program, Heightmap.diamond_square_map(scale,scale,.2, -2, 2, mid,mid), 0, 1, new Material(.25, 1, 1, .5), new Vec4(.6,.9,.6));
-            console.log(landscape.data);
+            let map = Heightmap.diamond_square_map(scale,scale,.1, -4, 4, mid,mid)
+            landscape.data = Mesh.from_heightmap(gl, shader_program, map, -4, 4, new Material(.25, 1, 1, .5), new Vec4(.6,.9,.6));
+            console.log(landscape.data)
             landscape.move_down(1.5);
+
+            let water = root.add_child();
+            water.data = Mesh.from_heightmap(gl, shader_program, Heightmap.generate_flat(Math.pow(2, scale), 1), 0, 1, default_mat, new Vec4(.3,.3,.8));
+            water.move_down(2.49);
 
             let sol = root.add_child();
 

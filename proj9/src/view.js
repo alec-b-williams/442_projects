@@ -5,8 +5,8 @@ class View {
 
   constructor(input) {
     this.x = 0;
-    this.y = 4;
-    this.z = -3;
+    this.y = 18;
+    this.z = -12;
     this.pitch = -.18;
     this.roll = 0;
     this.yaw = 0;
