@@ -32,11 +32,14 @@ class Shaders {
     #define MAX_LIGHT 12
     precision mediump float;
 
-    uniform sampler2D tex_0;
+    uniform sampler2D u_image0;
+    uniform sampler2D u_image1;
 
     uniform mat4 model;
     uniform mat4 modelview;
     uniform vec3 camera_pos;
+
+    uniform bool disable_lighting;
 
     uniform float mat_ambient;
     uniform float mat_diffuse;
@@ -95,6 +98,11 @@ class Shaders {
     }
 
     void main( void ) {
+      if (disable_lighting) {
+        f_color = texture(u_image0, v_uv);
+        return;
+      }
+
       vec3 cam_dir = normalize(camera_pos - v_pos); 
 
       vec3 ambient_color = vec3( mat_ambient, mat_ambient, mat_ambient );
@@ -121,8 +129,8 @@ class Shaders {
       
       vec3 mat_color = dir_color + total_point_color;
 
-      //f_color = texture(tex_0, v_uv) * vec4(mat_color, 1.0) * v_color;
-      f_color = v_color * vec4(mat_color,1);
+      f_color = texture(u_image0, v_uv) * vec4(mat_color, 1.0) * v_color;
+      //f_color = v_color * vec4(mat_color,1);
       //f_color = texture(tex_0, v_uv);
     }
   `;

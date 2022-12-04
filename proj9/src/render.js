@@ -1,7 +1,8 @@
 class RenderMesh {
-  constructor(matrix, mesh) {
+  constructor(matrix, mesh, da) {
     this.matrix = matrix;
     this.mesh = mesh;
+    this.disable_lighting = da
   }
 }
 

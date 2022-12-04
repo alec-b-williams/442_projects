@@ -62,19 +62,28 @@
 
             let point_linear_scale = 1.2;
 
-            let metal_image = new Image();
-            metal_image.src = "textures/earth.jpg";
-            metal_image.onload = on_load;
+            let earth_img = new Image();
+            earth_img.src = "textures/earth.jpg";
+            earth_img.onload = on_load;
 
             let default_mat = new Material(.25, 1, 2, 4);
             let root = new Node();
 
+            let cabin = root.add_child();
+            cabin.move_up(6)
+            function load_cabin(mesh) { cabin.data = mesh; };
+            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", load_cabin, new Vec4(111/255,78/255,55/255), default_mat);
+
+            let skybox = root.add_child();
+            skybox.data = Mesh.skybox(gl, shader_program, 1,1,1, new Material(1, 1, 1, .5));
+            skybox.scale = new Vec4(1000,1000,1000,1000);
+            skybox.disable_lighting = true;
+
             let landscape = root.add_child();
             let scale = 6;
             let mid = Math.pow(2, scale-1);
-            let map = Heightmap.diamond_square_map(scale,scale,.1, -4, 4, mid,mid)
+            let map = Heightmap.diamond_square_map(scale,scale,.05, -4, 10, mid,mid)
             landscape.data = Mesh.from_heightmap(gl, shader_program, map, -4, 4, new Material(.25, 1, 1, .5), new Vec4(.6,.9,.6));
-            console.log(landscape.data)
             landscape.move_down(1.5);
 
             let water = root.add_child();
@@ -82,6 +91,7 @@
             water.move_down(2.49);
 
             let sol = root.add_child();
+            sol.move_up(10);
 
             let earth = sol.add_child();
             earth.move_right(1);
@@ -151,6 +161,8 @@
               other_sphere.yaw_right(0.002);
               lamp.z = Math.sin(total_delta);
 
+              //console.log(cabin);
+
               let view = camera.get_view();
 
               let pos = [camera.x, camera.y, camera.z];
@@ -175,11 +187,11 @@
               set_uniform_scalar_array(gl, shader_program, "a_point_color", light_colors);
 
               for( let job of jobs ) {
-                draw(job.matrix, view.mul(job.matrix), proj, job.mesh);
+                draw(job.matrix, view.mul(job.matrix), proj, job.mesh, job.disable_lighting);
               }
             }
 
-            function draw( model, modelview, projection, mesh ) {
+            function draw( model, modelview, projection, mesh, disable_lighting ) {
               set_vertex_attrib_to_buffer( 
                 gl, mesh.program, 
                 "coordinates", 
@@ -211,6 +223,7 @@
               gl.bindBuffer( gl.ARRAY_BUFFER, mesh.verts );
               gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, mesh.indis );
               
+              set_uniform_bool(gl, shader_program, "disable_lighting", disable_lighting)
               set_uniform_matrix4(gl, shader_program, "model", model.data);
               set_uniform_matrix4(gl, shader_program, "modelview", modelview.data);
               set_uniform_matrix4(gl, shader_program, "projection", projection.data);
@@ -234,7 +247,7 @@
                   let pos = matrix.transform(node.x,node.y,node.z,1)
                   lights.push( new RenderLight( [pos.x, pos.y, pos.z], node.data.color));
                 } else {
-                  jobs.push( new RenderMesh( matrix, node.data ) );
+                  jobs.push( new RenderMesh( matrix, node.data, node.disable_lighting ) );
                 }
                 
               }

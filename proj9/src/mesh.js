@@ -28,37 +28,49 @@ class Mesh {
      * @param {number} depth 
      */
 
-    static box( gl, program, width, height, depth ) {
-        let hwidth = width / 2.0;
-        let hheight = height / 2.0;
-        let hdepth = depth / 2.0;
+    static box( gl, program, width, height, depth, mat ) {
+      let hwidth = width / 2.0;
+      let hheight = height / 2.0;
+      let hdepth = depth / 2.0;
 
-        let verts = [
-            hwidth, -hheight, -hdepth,      1.0, 0.0, 0.0, 1.0,   1,1,
-            -hwidth, -hheight, -hdepth,     0.0, 1.0, 0.0, 1.0,   0,1,
-            -hwidth, hheight, -hdepth,      0.0, 0.0, 1.0, 1.0,   0,0,
-            hwidth, hheight, -hdepth,       1.0, 1.0, 0.0, 1.0,   1,0,
+      let v1 = new Vec4(hwidth, -hheight, -hdepth).norm();
+      let v2 = new Vec4(-hwidth, -hheight, -hdepth).norm();
+      let v3 = new Vec4(-hwidth, hheight, -hdepth).norm();
+      let v4 = new Vec4(hwidth, hheight, -hdepth).norm();
 
-            hwidth, -hheight, hdepth,       1.0, 0.0, 1.0, 1.0,   0,0,
-            -hwidth, -hheight, hdepth,      0.0, 1.0, 1.0, 1.0,   1,0,
-            -hwidth, hheight, hdepth,       0.5, 0.5, 1.0, 1.0,   1,1,
-            hwidth, hheight, hdepth,        1.0, 1.0, 0.5, 1.0,   0,1,
-        ];
+      let v5 = new Vec4(hwidth, -hheight, hdepth).norm();
+      let v6 = new Vec4(-hwidth, -hheight, hdepth).norm();
+      let v7 = new Vec4(-hwidth, hheight, hdepth).norm();
+      let v8 = new Vec4(hwidth, hheight, hdepth).norm();
 
-        let indis = [
-            // counter-clockwise winding
-            0, 3, 2, 2, 1, 0,
-            4, 7, 3, 3, 0, 4,
-            5, 6, 7, 7, 4, 5,
-            1, 2, 6, 6, 5, 1,
-            3, 7, 6, 6, 2, 3,
-            4, 0, 1, 1, 5, 4,
-        ];
+      let verts = [
+        hwidth, -hheight, -hdepth,      1,1,1,1,   1,1, v1.x,v1.y,v1.z,
+        -hwidth, -hheight, -hdepth,     1,1,1,1,   0,1, v2.x,v2.y,v2.z,
+        -hwidth, hheight, -hdepth,      1,1,1,1,   0,0, v3.x,v3.y,v3.z,
+        hwidth, hheight, -hdepth,       1,1,1,1,   1,0, v4.x,v4.y,v4.z,
 
-        return new Mesh( gl, program, verts, indis );
+        hwidth, -hheight, hdepth,       1,1,1,1,   0,0, v5.x,v5.y,v5.z,
+        -hwidth, -hheight, hdepth,      1,1,1,1,   1,0, v6.x,v6.y,v6.z,
+        -hwidth, hheight, hdepth,       1,1,1,1,   1,1, v7.x,v7.y,v7.z,
+        hwidth, hheight, hdepth,        1,1,1,1,   0,1, v8.x,v8.y,v8.z,
+      ];
+
+      let indis = [
+        // counter-clockwise winding
+        0, 3, 2, 2, 1, 0,
+        4, 7, 3, 3, 0, 4,
+        5, 6, 7, 7, 4, 5,
+        1, 2, 6, 6, 5, 1,
+        3, 7, 6, 6, 2, 3,
+        4, 0, 1, 1, 5, 4,
+      ];
+
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
     }
 
-    static texturedBox( gl, program, width, height, depth ) {
+    static textured_box( gl, program, width, height, depth, mat ) {
       let hwidth = width / 2.0;
       let hheight = height / 2.0;
       let hdepth = depth / 2.0;
@@ -110,8 +122,73 @@ class Mesh {
           18, 16, 17, 17, 19, 18,
           21, 20, 22, 22, 23, 21,
       ];
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
+    }
 
-      return new Mesh( gl, program, verts, indis );
+    static skybox( gl, program, width, height, depth, mat ) {
+      let hwidth = width / 2.0;
+      let hheight = height / 2.0;
+      let hdepth = depth / 2.0;
+
+      let front = new Vec4(0,0,-1).scaled(-1);
+      let right = new Vec4(1,0,0).scaled(-1);
+      let back = new Vec4(0,0,1).scaled(-1);
+      let left = new Vec4(-1,0,0).scaled(-1);
+      let top = new Vec4(0,1,0).scaled(-1);
+      let bottom = new Vec4(0,-1,0).scaled(-1);
+
+      let verts = [
+          // front face: 0 - 3
+          -hwidth, hheight, -hdepth,     1,1,1,1,   0,    0.25,  front.x,front.y,front.z, // top left
+          hwidth, hheight, -hdepth,      1,1,1,1,   0.25, 0.25,  front.x,front.y,front.z,// top right
+          -hwidth, -hheight, -hdepth,    1,1,1,1,   0,    0.5,   front.x,front.y,front.z,// bottom left
+          hwidth, -hheight, -hdepth,     1,1,1,1,   0.25, 0.5,   front.x,front.y,front.z,// bottom right
+
+          // right face: 4 - 7
+          hwidth, hheight, -hdepth,      1,1,1,1,   0.25, 0.25,  right.x,right.y,right.z,// top left
+          hwidth, hheight, hdepth,       1,1,1,1,   0.5,  0.25,  right.x,right.y,right.z,// top right
+          hwidth, -hheight, -hdepth,     1,1,1,1,   0.25, 0.5,   right.x,right.y,right.z,// bottom left
+          hwidth, -hheight, hdepth,      1,1,1,1,   0.5,  0.5,   right.x,right.y,right.z,// bottom right
+
+          // back face: 8 - 11
+          hwidth, hheight, hdepth,       1,1,1,1,   0.5,  0.25,  back.x,back.y,back.z,// top left
+          -hwidth, hheight, hdepth,      1,1,1,1,   0.75, 0.25,  back.x,back.y,back.z,// top right
+          hwidth, -hheight, hdepth,      1,1,1,1,   0.5,  0.5,   back.x,back.y,back.z,// bottom left
+          -hwidth, -hheight, hdepth,     1,1,1,1,   0.75, 0.5,   back.x,back.y,back.z,// bottom right
+
+          // left face: 12 - 15
+          -hwidth, hheight, -hdepth,     1,1,1,1,   0.75, 0.25,  left.x,left.y,left.z,// top left
+          -hwidth, hheight, hdepth,      1,1,1,1,   1,    0.25,  left.x,left.y,left.z,// top right
+          -hwidth, -hheight, -hdepth,    1,1,1,1,   0.75, 0.5,   left.x,left.y,left.z,// bottom left
+          -hwidth, -hheight, hdepth,     1,1,1,1,   1,    0.5,   left.x,left.y,left.z,// bottom right
+
+          // top face: 16 - 19
+          hwidth, hheight, hdepth,       1,1,1,1,   0.5,  0,     top.x,top.y,top.z,// top left
+          -hwidth, hheight, hdepth,      1,1,1,1,   0.75, 0,     top.x,top.y,top.z,// top right
+          hwidth, hheight, -hdepth,      1,1,1,1,   0.5,  0.25,  top.x,top.y,top.z,// bottom left
+          -hwidth, hheight, -hdepth,     1,1,1,1,   0.75, 0.25,  top.x,top.y,top.z,// bottom right
+
+          // bottom face: 20 - 23
+          hwidth, -hheight, hdepth,      1,1,1,1,   0.5, 0.5,    bottom.x,bottom.y,bottom.z,// top left
+          -hwidth, -hheight, hdepth,     1,1,1,1,   0.75, 0.5,   bottom.x,bottom.y,bottom.z,// top right
+          hwidth, -hheight, -hdepth,     1,1,1,1,   0.5, 0.75,   bottom.x,bottom.y,bottom.z,// bottom left
+          -hwidth, -hheight, -hdepth,    1,1,1,1,   0.75, 0.75,  bottom.x,bottom.y,bottom.z,// bottom right
+      ];
+
+      let indis = [
+          // counter-clockwise winding
+          2,  0,   1,  1,  3,  2,
+          6,  4,   5,  5,  7,  6,
+          10,  8,  9, 9, 11,  10,
+          13, 12, 14, 14, 15, 13,
+          17, 16, 18, 18, 19, 17,
+          22, 20, 21, 21, 23, 22,
+      ];
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
     }
 
     static uv_sphere(gl, program, subdivs, mat) {
@@ -268,40 +345,70 @@ class Mesh {
      * @param {WebGLProgram} program
      * @param {string} text
      */
-    static from_obj_text( gl, program, text ) {
+    static from_obj_text( gl, program, text, color ) {
         // create verts and indis from the text 
 		
-        let verts = []
-        let indis = []
-        
-        text = text.replace(/\r/g, '');
-        let lines = text.split('\n');
-        lines = lines.filter(e => { return e !== ''; });
-        //console.log(lines)
+      let verts = [];
+      let norms = [];
+      let indis = [];
+      let total_indis = 0;
+      let final_verts = [];
 
-        for (let i = 0; i < lines.length; i++) {
-          let entries = lines[i].split(' ').filter(e => { return e !== ''; });
-          //console.log(entries)
-          let vals = entries.slice(1);
+      function push_vert( verts_list, pos, u, v, norm, color) {
+        verts_list.push(pos.x,pos.y,pos.z);
+        verts_list.push(color.x,color.y,color.z,1);
+        verts_list.push(u, v);
+        verts_list.push(norm.x,norm.y,norm.z);
+      }
+      
+      text = text.replace(/\r/g, '');
+      let lines = text.split('\n');
+      lines = lines.filter(e => { return e !== ''; });
 
+      for (let i = 0; i < lines.length; i++) {
+        let entries = lines[i].split(' ').filter(e => { return e !== ''; });
+        //console.log(entries)
+        let vals = entries.slice(1);
+
+        /*for (let j = 0; j < vals.length; j++) {
+          vals[j] = parseFloat(vals[j]);
+        }*/
+
+        if (entries[0] === "v") {
           for (let j = 0; j < vals.length; j++) {
             vals[j] = parseFloat(vals[j]);
           }
-
-          if (entries[0] === "v") {
-            let colors = [Math.random(), Math.random(), Math.random(), 1];
-            verts = verts.concat(vals);
-            verts = verts.concat(colors);
-          } else {
-            vals = vals.map(n => {return n - 1}).reverse();
-            indis = indis.concat(vals);
+          console.log(vals);
+          let vert = new Vec4(vals[0], vals[1], vals[2]);
+          verts.push(vert);
+        } else if (entries[0] === "vn") {
+          for (let j = 0; j < vals.length; j++) {
+            vals[j] = parseFloat(vals[j]);
           }
+          let norm = new Vec4(vals[0], vals[1], vals[2]);
+          norms.push(norm);
+        } else if (entries[0] === "f") {
+          for (let j = 0; j < vals.length; j++) {
+            let pair = vals[j].split("//");
+            //console.log(pair)
+            //console.log(verts[parseInt(pair[0])-1])
+            console.log(verts[parseInt(pair[0])-1], norms[parseInt(pair[1])-1])
+            push_vert(final_verts, verts[parseInt(pair[0])-1],0,1, norms[parseInt(pair[1])-1], color);
+          }
+          indis.push(total_indis+2, total_indis+1, total_indis);
+          total_indis += 3;
         }
+      }
 
-        console.log(verts)
-        console.log(indis)
-		
-        return new Mesh( gl, program, verts, indis );
+      console.log(verts);
+
+      let test_verts = []
+      let test_indis = [0,1,2]
+      push_vert(test_verts, new Vec4(0,2,0),0,1, new Vec4(1,0,0), color);
+      push_vert(test_verts, new Vec4(0,0,0),0,1, new Vec4(1,0,0), color);
+      push_vert(test_verts, new Vec4(0,0,3),0,1, new Vec4(1,0,0), color);
+  
+      return new Mesh( gl, program, final_verts, indis );
     }
 
     /**
@@ -311,7 +418,7 @@ class Mesh {
      * @param {WebGLProgram} program
      * @param {function} f the function to call and give mesh to when finished.
      */
-    static from_obj_file( gl, file_name, program, f ) {
+    static from_obj_file( gl, program, file_name, f, color, mat) {
         let request = new XMLHttpRequest();
         
         // the function that will be called when the file is being loaded
@@ -325,8 +432,8 @@ class Mesh {
 
             // now we know the file exists and is ready
 			      // load the file 
-            let loaded_mesh = Mesh.from_obj_text( gl, program, request.responseText );
-
+            let loaded_mesh = Mesh.from_obj_text( gl, program, request.responseText, color );
+            loaded_mesh.material = mat;
             console.log( 'loaded ', file_name );
             f( loaded_mesh );
         };

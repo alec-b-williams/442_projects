@@ -11,7 +11,7 @@ class View {
     this.roll = 0;
     this.yaw = 0;
     this.input = input;
-    this.inversion = 1;
+    this.inversion = -1;
     this.orient = new Mat4();
   }
 

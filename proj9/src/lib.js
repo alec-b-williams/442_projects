@@ -26,7 +26,7 @@ function create_and_load_elements_buffer(gl, data, usage) {
 
   let buf_id = gl.createBuffer();
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, buf_id );
-  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Int16Array(data), usage );
+  gl.bufferData( gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(data), usage );
   
   gl.bindBuffer( gl.ELEMENT_ARRAY_BUFFER, current_array_buf );
 
@@ -185,4 +185,9 @@ function set_uniform_scalar_array(gl, program, name, data) {
 function set_uniform_vector3(gl, program, name, data) {
   const loc = gl.getUniformLocation(program, name);
   gl.uniform3fv(loc, data);
+}
+
+function set_uniform_bool(gl, program, name, data) {
+  const loc = gl.getUniformLocation(program, name);
+  gl.uniform1i(loc, data);
 }

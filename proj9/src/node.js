@@ -10,6 +10,7 @@ class Node {
     this.data = data;
     this.children = [];
     this.update_bearing(0,0,0,0,0,0);
+    this.disable_lighting = false;
   }
 
   add_child() {
