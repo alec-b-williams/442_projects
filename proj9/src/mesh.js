@@ -345,7 +345,7 @@ class Mesh {
      * @param {WebGLProgram} program
      * @param {string} text
      */
-    static from_obj_text( gl, program, text, color ) {
+    static from_obj_text( gl, program, text, color, isInterior ) {
         // create verts and indis from the text 
 		
       let verts = [];
@@ -355,6 +355,7 @@ class Mesh {
       let final_verts = [];
 
       function push_vert( verts_list, pos, u, v, norm, color) {
+        if (isInterior) {norm = norm.scaled(-1);}
         verts_list.push(pos.x,pos.y,pos.z);
         verts_list.push(color.x,color.y,color.z,1);
         verts_list.push(u, v);
@@ -367,18 +368,12 @@ class Mesh {
 
       for (let i = 0; i < lines.length; i++) {
         let entries = lines[i].split(' ').filter(e => { return e !== ''; });
-        //console.log(entries)
         let vals = entries.slice(1);
-
-        /*for (let j = 0; j < vals.length; j++) {
-          vals[j] = parseFloat(vals[j]);
-        }*/
 
         if (entries[0] === "v") {
           for (let j = 0; j < vals.length; j++) {
             vals[j] = parseFloat(vals[j]);
           }
-          console.log(vals);
           let vert = new Vec4(vals[0], vals[1], vals[2]);
           verts.push(vert);
         } else if (entries[0] === "vn") {
@@ -390,23 +385,19 @@ class Mesh {
         } else if (entries[0] === "f") {
           for (let j = 0; j < vals.length; j++) {
             let pair = vals[j].split("//");
-            //console.log(pair)
-            //console.log(verts[parseInt(pair[0])-1])
-            console.log(verts[parseInt(pair[0])-1], norms[parseInt(pair[1])-1])
             push_vert(final_verts, verts[parseInt(pair[0])-1],0,1, norms[parseInt(pair[1])-1], color);
           }
-          indis.push(total_indis+2, total_indis+1, total_indis);
+          if (isInterior) {
+            indis.push(total_indis, total_indis+1, total_indis+2);
+          } else {
+            indis.push(total_indis+2, total_indis+1, total_indis);
+          }
+          
           total_indis += 3;
         }
       }
 
-      console.log(verts);
-
-      let test_verts = []
-      let test_indis = [0,1,2]
-      push_vert(test_verts, new Vec4(0,2,0),0,1, new Vec4(1,0,0), color);
-      push_vert(test_verts, new Vec4(0,0,0),0,1, new Vec4(1,0,0), color);
-      push_vert(test_verts, new Vec4(0,0,3),0,1, new Vec4(1,0,0), color);
+      
   
       return new Mesh( gl, program, final_verts, indis );
     }
@@ -418,7 +409,7 @@ class Mesh {
      * @param {WebGLProgram} program
      * @param {function} f the function to call and give mesh to when finished.
      */
-    static from_obj_file( gl, program, file_name, f, color, mat) {
+    static from_obj_file( gl, program, file_name, f, color, mat, isInterior) {
         let request = new XMLHttpRequest();
         
         // the function that will be called when the file is being loaded
@@ -432,7 +423,7 @@ class Mesh {
 
             // now we know the file exists and is ready
 			      // load the file 
-            let loaded_mesh = Mesh.from_obj_text( gl, program, request.responseText, color );
+            let loaded_mesh = Mesh.from_obj_text( gl, program, request.responseText, color, isInterior );
             loaded_mesh.material = mat;
             console.log( 'loaded ', file_name );
             f( loaded_mesh );

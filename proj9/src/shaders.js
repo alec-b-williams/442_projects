@@ -16,6 +16,7 @@ class Shaders {
     out vec4 v_color;
     out vec2 v_uv;
     out vec3 v_normal;
+    out float fog_depth;
 
     void main( void ) {
       gl_Position = projection * modelview * vec4( coordinates, 1.0 );
@@ -24,6 +25,7 @@ class Shaders {
       v_color = color;
       v_uv = uv;
       v_normal = normalize( mat3( model ) * normal );
+      fog_depth = ( modelview * vec4( coordinates, 1.0 ) ).z;
     }
   `;
 
@@ -49,6 +51,10 @@ class Shaders {
     uniform vec3 sun_dir;
     uniform vec3 sun_color;
 
+    uniform float fog_near;
+    uniform float fog_far;
+    uniform vec3 fog_color;
+
     uniform int size;
     uniform float a_point_pos[MAX_LIGHT * 3];
     uniform float a_point_color[MAX_LIGHT * 3];
@@ -58,6 +64,7 @@ class Shaders {
     in vec4 v_color;
     in vec2 v_uv;
     in vec3 v_normal;
+    in float fog_depth;
 
     out vec4 f_color;
 
@@ -97,12 +104,11 @@ class Shaders {
       ) * light_color * specular * cos_light_surf_normal;
     }
 
-    void main( void ) {
-      if (disable_lighting) {
-        f_color = texture(u_image0, v_uv);
-        return;
-      }
+    vec4 mix(vec4 color1, vec4 color2, float mix_amt) {
+      return (color1 * (1.0-mix_amt)) + (color2 * (mix_amt));
+    }
 
+    void main( void ) {
       vec3 cam_dir = normalize(camera_pos - v_pos); 
 
       vec3 ambient_color = vec3( mat_ambient, mat_ambient, mat_ambient );
@@ -127,9 +133,15 @@ class Shaders {
         total_point_color += (diffuse_color + specular_color) * attenuation;
       }
       
-      vec3 mat_color = dir_color + total_point_color;
-
-      f_color = texture(u_image0, v_uv) * vec4(mat_color, 1.0) * v_color;
+      vec3 mat_color;
+      if (disable_lighting) {
+        mat_color = total_point_color + ambient_color;
+      } else {
+        mat_color = dir_color + total_point_color;
+      }
+      
+      float fog_amount = smoothstep(fog_near, fog_far, fog_depth);
+      f_color = mix(texture(u_image0, v_uv) * vec4(mat_color, 1.0) * v_color, vec4(fog_color,1.0), fog_amount);
       //f_color = v_color * vec4(mat_color,1);
       //f_color = texture(tex_0, v_uv);
     }

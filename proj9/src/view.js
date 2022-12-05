@@ -4,14 +4,14 @@ const rotate_scale = 0.005;
 class View {
 
   constructor(input) {
-    this.x = 0;
-    this.y = 18;
-    this.z = -12;
-    this.pitch = -.18;
+    this.x = 4;
+    this.y = 7;
+    this.z = 0;
+    this.pitch = 0;
     this.roll = 0;
-    this.yaw = 0;
+    this.yaw = .75;
     this.input = input;
-    this.inversion = -1;
+    this.inversion = 1;
     this.orient = new Mat4();
   }
 

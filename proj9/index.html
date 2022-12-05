@@ -70,9 +70,42 @@
             let root = new Node();
 
             let cabin = root.add_child();
-            cabin.move_up(6)
-            function load_cabin(mesh) { cabin.data = mesh; };
-            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", load_cabin, new Vec4(111/255,78/255,55/255), default_mat);
+            cabin.move_up(6);
+            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin.data = mesh; }, new Vec4(111/255,78/255,55/255), default_mat, false);
+
+            let roof = cabin.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/roof.obj", (mesh) => { roof.data = mesh; }, new Vec4(45/255,45/255,45/255), default_mat, false);
+            roof.scale = new Vec4(0.4,0.5,0.45);
+            roof.move_up(2.1);
+
+            let cabin_interior = cabin.add_child();
+            cabin_interior.scale = new Vec4(.999,.999,.999);
+            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin_interior.data = mesh; }, new Vec4(240/255,240/255,240/255), default_mat, true);
+            cabin_interior.disable_lighting = true;
+
+            let chimney = cabin.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/chimney.obj", (mesh) => { chimney.data = mesh; }, new Vec4(150/255,78/255,55/255), default_mat, false);
+            chimney.scale = new Vec4(0.5,0.5,0.5);
+            chimney.move_left(1.2);
+            chimney.move_back(.8);
+            chimney.disable_lighting = true;
+            
+            let tree_top = cabin.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/tree_top.obj", (mesh) => { tree_top.data = mesh; }, new Vec4(78/255,150/255,55/255), default_mat, false);
+            tree_top.scale = new Vec4(0.3,0.3,0.3);
+            tree_top.move_up(0.25);
+            tree_top.disable_lighting = true;
+
+            let trunk = tree_top.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/tree_trunk.obj", (mesh) => { trunk.data = mesh; }, new Vec4(75/255,20/255,20/255), default_mat, false);
+            trunk.move_up(.1);
+            tree_top.disable_lighting = true;
+
+            let star = tree_top.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/star.obj", (mesh) => { star.data = mesh; }, new Vec4(200/255,200/255,20/255), new Material(.75, 1, 2, 4), false);
+            tree_top.disable_lighting = true;
+            star.move_up(4.5);
+            star.scale = new Vec4(0.75,0.75,0.75);
 
             let skybox = root.add_child();
             skybox.data = Mesh.skybox(gl, shader_program, 1,1,1, new Material(1, 1, 1, .5));
@@ -141,6 +174,10 @@
             set_uniform_vector3(gl, shader_program, "sun_dir", sun_dir.get_data());
             set_uniform_vector3(gl, shader_program, "sun_color", sun_color);
 
+            set_uniform_vector3(gl, shader_program, "fog_color", [0.8, 0.9, 1]);
+            set_uniform_scalar(gl, shader_program, "fog_near", 4);
+            set_uniform_scalar(gl, shader_program, "fog_far", 10);
+
             set_uniform_int(gl, shader_program, "size", 0);
             set_uniform_scalar(gl, shader_program, "linear_scale", point_linear_scale)
 
@@ -160,8 +197,6 @@
               other_sphere.roll_cw(0.002);
               other_sphere.yaw_right(0.002);
               lamp.z = Math.sin(total_delta);
-
-              //console.log(cabin);
 
               let view = camera.get_view();
 
