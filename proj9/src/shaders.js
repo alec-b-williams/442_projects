@@ -34,8 +34,7 @@ class Shaders {
     #define MAX_LIGHT 12
     precision mediump float;
 
-    uniform sampler2D u_image0;
-    uniform sampler2D u_image1;
+    uniform sampler2D tex_0;
 
     uniform mat4 model;
     uniform mat4 modelview;
@@ -141,7 +140,7 @@ class Shaders {
       }
       
       float fog_amount = smoothstep(fog_near, fog_far, fog_depth);
-      f_color = mix(texture(u_image0, v_uv) * vec4(mat_color, 1.0) * v_color, vec4(fog_color,1.0), fog_amount);
+      f_color = mix(texture(tex_0, v_uv) * vec4(mat_color, 1.0) * v_color, vec4(fog_color,1.0), fog_amount);
       //f_color = v_color * vec4(mat_color,1);
       //f_color = texture(tex_0, v_uv);
     }

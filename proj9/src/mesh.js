@@ -70,6 +70,42 @@ class Mesh {
       return mesh;
     }
 
+    static flat(gl, program, mat, color) {
+      let verts = [
+        -1,0,-1, color.x,color.y,color.z,1,0,0,0,1,0,
+        1,0,-1, color.x,color.y,color.z,1,0,0,0,1,0,
+        -1,0,1, color.x,color.y,color.z,1,0,0,0,1,0,
+        1,0,1, color.x,color.y,color.z,1,0,0,0,1,0,
+      ]
+
+      let indis = [
+        2,0,1,
+        1,3,2
+      ]
+
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
+    }
+
+    static flat_tex(gl, program, mat, color) {
+      let verts = [
+        -1,-1,0, color.x,color.y,color.z,1,0,0,0,0,-1,
+        1,-1,0, color.x,color.y,color.z,1,0,1,0,0,-1,
+        -1,1,0, color.x,color.y,color.z,1,1,0,0,0,-1,
+        1,1,0, color.x,color.y,color.z,1,1,1,0,0,-1,
+      ]
+
+      let indis = [
+        2,0,1,
+        1,3,2
+      ]
+
+      let mesh = new Mesh( gl, program, verts, indis );
+      mesh.material = mat;
+      return mesh;
+    }
+
     static textured_box( gl, program, width, height, depth, mat ) {
       let hwidth = width / 2.0;
       let hheight = height / 2.0;
@@ -191,9 +227,11 @@ class Mesh {
       return mesh;
     }
 
-    static uv_sphere(gl, program, subdivs, mat) {
+    static uv_sphere(gl, program, subdivs, mat, color, use_tex) {
       let verts = []
       let indis = []
+
+      color = color ?? new Vec4(1,1,1,1);
 
       // for each layer in the y direction
       for (let layer = 0; layer <= subdivs; layer++) {
@@ -210,8 +248,13 @@ class Mesh {
           let z = reduce(Math.sin( rads ) / 2) * Math.sin( y_turns * TAU );
 
           verts.push(x,y,z);
-          verts.push(1,1,1,1);
-          verts.push(subdiv/subdivs, layer/subdivs)
+          verts.push(color.x,color.y,color.z,1);
+          if (use_tex) {
+            verts.push(subdiv/subdivs, layer/subdivs)
+          } else {
+            verts.push(0, 0)
+          }
+          
           verts.push(x,y,z);
         }
 
@@ -232,8 +275,8 @@ class Mesh {
       return mesh;
     }
 
-    static from_heightmap(gl, program, map, min, max, mat, color) {
-      const MIN_HEIGHT_COLOR = 0.2;
+    static from_heightmap(gl, program, map, min, max, mat, color, disable_height_color) {
+      const MIN_HEIGHT_COLOR = (disable_height_color ? 1 : 0.2);
       let rows = map.length;
       let cols = map[0].length;
       let off_x = (cols / 2.0)-.5;
@@ -281,13 +324,13 @@ class Mesh {
           v_br.x += col - off_x;
           v_br.z += row - off_z;
 
-          push_vert( verts, v_tl, 0, 1, normal_t1, color );
-          push_vert( verts, v_tr, 1, 1, normal_t1, color );
+          push_vert( verts, v_tl, 0, 0, normal_t1, color );
+          push_vert( verts, v_tr, 0, 0, normal_t1, color );
           push_vert( verts, v_bl, 0, 0, normal_t1, color );
           
-          push_vert( verts, v_br, 1, 0, normal_t2, color );
+          push_vert( verts, v_br, 0, 0, normal_t2, color );
           push_vert( verts, v_bl, 0, 0, normal_t2, color );
-          push_vert( verts, v_tr, 1, 1, normal_t2, color );
+          push_vert( verts, v_tr, 0, 0, normal_t2, color );
           
           indis.push(
             indi_start,
@@ -385,7 +428,7 @@ class Mesh {
         } else if (entries[0] === "f") {
           for (let j = 0; j < vals.length; j++) {
             let pair = vals[j].split("//");
-            push_vert(final_verts, verts[parseInt(pair[0])-1],0,1, norms[parseInt(pair[1])-1], color);
+            push_vert(final_verts, verts[parseInt(pair[0])-1],0,0, norms[parseInt(pair[1])-1], color);
           }
           if (isInterior) {
             indis.push(total_indis, total_indis+1, total_indis+2);
@@ -396,9 +439,7 @@ class Mesh {
           total_indis += 3;
         }
       }
-
       
-  
       return new Mesh( gl, program, final_verts, indis );
     }
 
@@ -428,7 +469,6 @@ class Mesh {
             console.log( 'loaded ', file_name );
             f( loaded_mesh );
         };
-
         
         request.open( 'GET', file_name ); // initialize request. 
         request.send();                   // execute request

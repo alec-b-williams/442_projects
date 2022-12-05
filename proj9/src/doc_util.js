@@ -51,3 +51,7 @@ function update_labels() {
   document.getElementById("cam_pitch_label").textContent = "pitch: " + (camera.pitch*360).toFixed(1)
   document.getElementById("cam_yaw_label").textContent = "yaw: " + (camera.yaw*360).toFixed(1)
 }
+
+function rand_max_min(min, max) {
+  return Math.random() * (max - min) + min;
+}

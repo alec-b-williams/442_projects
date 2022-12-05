@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            #the-canvas { border: 1px solid darkblue; }
-            body {background-color: black; color: white;}
-        </style>
-    </head>
+  <head>
+    <style>
+      #the-canvas { border: 1px solid darkblue; }
+      body {background-color: black; color: white;}
+    </style>
+  </head>
 
     <body>
         <canvas id = "the-canvas" width = "800" height = "600"></canvas>
@@ -21,7 +21,7 @@
         <span id="cam_z_label"></span><br>
         <span id="cam_roll_label"></span><br>
         <span id="cam_pitch_label"></span><br>
-        <span id="cam_yaw_label"></span><br>  
+        <span id="cam_yaw_label"></span><br>
 
         <script src = "src/lib.js"></script>
         <script src = "src/vector_lib.js"></script>
@@ -57,55 +57,230 @@
             let last_update = performance.now();
             let total_delta = 0;
 
-            let sun_dir = (new Vec4(1,1,0)).norm();
+            let sun_dir = (new Vec4(0,1,-1)).norm();
             let sun_color = [1,1,.85];
 
             let point_linear_scale = 1.2;
 
             let earth_img = new Image();
-            earth_img.src = "textures/earth.jpg";
+            earth_img.src = "textures/b00.png";
             earth_img.onload = on_load;
 
-            let default_mat = new Material(.25, 1, 2, 4);
+            let shiny_mat = new Material(.1, 1, 2, 4);
+            let dull_mat = new Material(.1, 1, .2, .5);
+            let bright_mat = new Material(.95, 1, .2, .5);
+
             let root = new Node();
 
+            let sign = root.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/sign.obj", (mesh) => { sign.data = mesh; }, new Vec4(.4,.4,.2), dull_mat, false);
+            sign.move_left(13.5);
+            sign.move_forward(4);
+            sign.yaw_left(.1)
+            sign.scale = new Vec4(.3,.3,.3)
+
+            let sign2 = root.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/sign.obj", (mesh) => { sign2.data = mesh; }, new Vec4(.4,.4,.2), dull_mat, false);
+            sign2.move_left(10);
+            sign2.move_forward(-6);
+            sign2.yaw_left(.1)
+            sign2.scale = new Vec4(.3,.3,.3)
+
             let cabin = root.add_child();
-            cabin.move_up(6);
-            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin.data = mesh; }, new Vec4(111/255,78/255,55/255), default_mat, false);
+            cabin.move_up(.7);
+            cabin.move_back(20);
+            cabin.move_right(3);
+            cabin.yaw_left(.35);
+            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin.data = mesh; }, new Vec4(111/255,78/255,55/255), dull_mat, false);
+
+            let pic = cabin.add_child()
+            pic.data = Mesh.flat_tex(gl, shader_program, dull_mat, new Vec4(1,1,1));
+            //pic.pitch_up(.5);
+            //pic.roll_cw(0.25);
+            pic.scale = new Vec4(.35,.5,.35)
+            pic.move_up(1);
+            pic.yaw = 0.75
+            pic.roll_cw(.25);
+            pic.move_forward(1.3);
+
+            let bed = cabin.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bed_base.obj", (mesh) => { bed.data = mesh; }, new Vec4(75/255,20/255,20/255), dull_mat, false);
+            bed.scale = new Vec4(.3,.3,.3);
+            bed.yaw_left(.25);
+            bed.move_right(1.8);
+            bed.move_back(.75);
+            bed.yaw_left(.5);
+            bed.disable_lighting = true;
+            
+            let mattress = bed.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bed_matt.obj", (mesh) => { mattress.data = mesh; }, new Vec4(1,1,1), dull_mat, false);
+            mattress.disable_lighting = true;
+
+            let blanket = bed.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bed_cover.obj", (mesh) => { blanket.data = mesh; }, new Vec4(.8,.2,.2), dull_mat, false);
+            blanket.disable_lighting = true;
 
             let roof = cabin.add_child();
-            Mesh.from_obj_file(gl, shader_program, "models/roof.obj", (mesh) => { roof.data = mesh; }, new Vec4(45/255,45/255,45/255), default_mat, false);
+            Mesh.from_obj_file(gl, shader_program, "models/roof.obj", (mesh) => { roof.data = mesh; }, new Vec4(45/255,45/255,45/255), dull_mat, false);
             roof.scale = new Vec4(0.4,0.5,0.45);
             roof.move_up(2.1);
 
             let cabin_interior = cabin.add_child();
-            cabin_interior.scale = new Vec4(.999,.999,.999);
-            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin_interior.data = mesh; }, new Vec4(240/255,240/255,240/255), default_mat, true);
+            cabin_interior.scale = new Vec4(.999,.99,.999);
+            cabin_interior.move_up(.01);
+            Mesh.from_obj_file(gl, shader_program, "models/cabin.obj", (mesh) => { cabin_interior.data = mesh; }, new Vec4(240/255,240/255,240/255), dull_mat, true);
             cabin_interior.disable_lighting = true;
 
             let chimney = cabin.add_child();
-            Mesh.from_obj_file(gl, shader_program, "models/chimney.obj", (mesh) => { chimney.data = mesh; }, new Vec4(150/255,78/255,55/255), default_mat, false);
+            Mesh.from_obj_file(gl, shader_program, "models/chimney.obj", (mesh) => { chimney.data = mesh; }, new Vec4(150/255,78/255,55/255), dull_mat, false);
             chimney.scale = new Vec4(0.5,0.5,0.5);
             chimney.move_left(1.2);
-            chimney.move_back(.8);
+            chimney.move_back(1.3);
             chimney.disable_lighting = true;
+
+            let firewood = chimney.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/firewood.obj", (mesh) => { firewood.data = mesh; }, new Vec4(210/255,150/255,50/255), dull_mat, false);
+            firewood.scale = new Vec4(0.5,0.5,0.5); 
+            firewood.move_up(.2)
+            firewood.disable_lighting = true;
+
+            let flame = firewood.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/flame.obj", (mesh) => { flame.data = mesh; }, new Vec4(1, .6,.2), bright_mat, false);
+            flame.disable_lighting = true;
+            let flamelight = flame.add_child();
+            flamelight.data = new Light([1,.6,.2])
             
-            let tree_top = cabin.add_child();
-            Mesh.from_obj_file(gl, shader_program, "models/tree_top.obj", (mesh) => { tree_top.data = mesh; }, new Vec4(78/255,150/255,55/255), default_mat, false);
-            tree_top.scale = new Vec4(0.3,0.3,0.3);
-            tree_top.move_up(0.25);
+            let tree = cabin.add_child();
+            tree.scale = new Vec4(0.3,0.3,0.3);
+            tree.move_up(0.25);
+            tree.move_left(.8);
+            tree.move_forward(1);
+            tree.yaw_right(.1);
+            tree.disable_lighting = true;
+
+            let tree_top = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/tree_top.obj", (mesh) => { tree_top.data = mesh; }, new Vec4(78/255,150/255,55/255), dull_mat, false);
+            tree_top.scale = new Vec4(1.5,1,1.5);
             tree_top.disable_lighting = true;
 
-            let trunk = tree_top.add_child();
-            Mesh.from_obj_file(gl, shader_program, "models/tree_trunk.obj", (mesh) => { trunk.data = mesh; }, new Vec4(75/255,20/255,20/255), default_mat, false);
+            let trunk = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/tree_trunk.obj", (mesh) => { trunk.data = mesh; }, new Vec4(75/255,20/255,20/255), dull_mat, false);
             trunk.move_up(.1);
-            tree_top.disable_lighting = true;
+            tree.disable_lighting = true;
 
-            let star = tree_top.add_child();
-            Mesh.from_obj_file(gl, shader_program, "models/star.obj", (mesh) => { star.data = mesh; }, new Vec4(200/255,200/255,20/255), new Material(.75, 1, 2, 4), false);
-            tree_top.disable_lighting = true;
+            let star = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/star.obj", (mesh) => { star.data = mesh; }, new Vec4(200/255,200/255,20/255), bright_mat, false);
+            tree.disable_lighting = true;
             star.move_up(4.5);
             star.scale = new Vec4(0.75,0.75,0.75);
+
+            let star_light = star.add_child()
+            star_light.data = new Light([100/255,100/255,20/255])
+
+            let red_bulb = tree.add_child();
+            red_bulb.data  = Mesh.uv_sphere(gl, shader_program, 8, bright_mat, new Vec4(1,.6,.6));
+            red_bulb.scale = new Vec4(.5,.5,.5);
+            red_bulb.move_forward(1);
+            red_bulb.move_right(1);
+            red_bulb.move_up(1);
+            red_bulb.disable_lighting = true;
+
+            let red_light = red_bulb.add_child();
+            red_light.data = new Light([.25,.15,.15])
+
+            let green_bulb = tree.add_child();
+            green_bulb.data = Mesh.uv_sphere(gl, shader_program, 8, bright_mat, new Vec4(.6,1,.6));
+            green_bulb.scale = new Vec4(.5,.5,.5);
+            green_bulb.move_back(.35);
+            green_bulb.move_right(.85);
+            green_bulb.move_up(2);
+            green_bulb.disable_lighting = true;
+
+            let green_light = green_bulb.add_child();
+            green_light.data = new Light([.15,.25,.15])
+
+            let blue_bulb = tree.add_child();
+            blue_bulb.data = Mesh.uv_sphere(gl, shader_program, 8, bright_mat, new Vec4(.6,.6,1));
+            blue_bulb.scale = new Vec4(.5,.5,.5);
+            blue_bulb.move_forward(-.65);
+            blue_bulb.move_right(-.85);
+            blue_bulb.move_up(3);
+            blue_bulb.disable_lighting = true;
+
+            let blue_light = blue_bulb.add_child();
+            blue_light.data = new Light([.15,.15,.25])
+            
+
+            let present_1 = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/box.obj", (mesh) => { present_1.data = mesh; }, new Vec4(1,.2,.2), dull_mat, false);
+            present_1.move_back(1.5);
+            present_1.move_right(1.5);
+            present_1.yaw_right(.25);
+            present_1.move_down(.2);
+            present_1.scale = new Vec4(.5,.5,.5);
+            present_1.disable_lighting = true;
+
+            let bow_1 = present_1.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bow.obj", (mesh) => { bow_1.data = mesh; }, new Vec4(.9,.9,.9), dull_mat, false);
+            bow_1.disable_lighting = true;
+
+            let present_2 = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/box.obj", (mesh) => { present_2.data = mesh; }, new Vec4(.2,.2,.6), dull_mat, false);
+            present_2.scale = new Vec4(.2,.2,.3);
+            present_2.move_forward(1.5);
+            present_2.move_right(1.5);
+            present_2.yaw_right(.4);
+            present_2.move_down(.1);
+            present_2.disable_lighting = true;
+
+            let bow_2 = present_2.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bow.obj", (mesh) => { bow_2.data = mesh; }, new Vec4(.9,.9,.9), dull_mat, false);
+            bow_2.disable_lighting = true;
+
+            let present_3 = tree.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/box.obj", (mesh) => { present_3.data = mesh; }, new Vec4(.2,.6,.2), dull_mat, false);
+            present_3.scale = new Vec4(1,.2,1);
+            present_3.move_forward(1.5);
+            present_3.move_right(.5);
+            present_3.yaw_right(.4);
+            present_3.move_down(.6);
+            present_3.disable_lighting = true;
+
+            let bow_3 = present_3.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/bow.obj", (mesh) => { bow_3.data = mesh; }, new Vec4(.9,.9,.9), dull_mat, false);
+            bow_3.disable_lighting = true;
+
+            let table = cabin.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/table.obj", (mesh) => { table.data = mesh; }, new Vec4(75/255,20/255,20/255), dull_mat, false);
+            table.scale = new Vec4(0.25,0.3,0.25);
+            table.yaw_left(.25)
+            table.move_left(1.8);
+            table.move_back(.8);
+
+            let chair = table.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/chair.obj", (mesh) => { chair.data = mesh; }, new Vec4(75/255,20/255,20/255), dull_mat, false);
+            chair.scale = new Vec4(0.7,0.7,0.7);
+            chair.move_back(1);
+            chair.move_right(1.3);
+            chair.yaw_left(.15)
+
+            let dish = table.add_child();
+            Mesh.from_obj_file(gl, shader_program, "models/dish.obj", (mesh) => { dish.data = mesh; }, new Vec4(.9,.9,.9), dull_mat, false);
+            dish.scale = new Vec4(0.25,0.25,0.25);
+            dish.move_up(1.88);
+
+            let boxscape = dish.add_child();
+            let scale = 3;
+            let mid = Math.pow(2, scale-1);
+            let map = Heightmap.diamond_square_map(scale,scale,.05, -.2, 3, mid,mid)
+            boxscape.data = Mesh.from_heightmap(gl, shader_program, map, 0, 4, dull_mat, new Vec4(.4,.9,.4), true);
+            boxscape.move_down(.75);
+            boxscape.scale = new Vec4(.6,.6,.6);
+
+            let boxscape_water = dish.add_child();
+            boxscape_water.data = Mesh.flat(gl, shader_program, shiny_mat, new Vec4(.3,.3,.8));
+            boxscape_water.move_down(.3);
+            boxscape_water.scale = new Vec4(2.8,1,2.8);
 
             let skybox = root.add_child();
             skybox.data = Mesh.skybox(gl, shader_program, 1,1,1, new Material(1, 1, 1, .5));
@@ -113,41 +288,14 @@
             skybox.disable_lighting = true;
 
             let landscape = root.add_child();
-            let scale = 6;
-            let mid = Math.pow(2, scale-1);
-            let map = Heightmap.diamond_square_map(scale,scale,.05, -4, 10, mid,mid)
-            landscape.data = Mesh.from_heightmap(gl, shader_program, map, -4, 4, new Material(.25, 1, 1, .5), new Vec4(.6,.9,.6));
+            landscape.data = Mesh.from_heightmap(gl, shader_program, Heightmap.good_map, -4, 4, new Material(.95, 1, .2, .5), new Vec4(.9,1,1), true);
+            landscape.disable_lighting = true;
             landscape.move_down(1.5);
 
             let water = root.add_child();
-            water.data = Mesh.from_heightmap(gl, shader_program, Heightmap.generate_flat(Math.pow(2, scale), 1), 0, 1, default_mat, new Vec4(.3,.3,.8));
-            water.move_down(2.49);
-
-            let sol = root.add_child();
-            sol.move_up(10);
-
-            let earth = sol.add_child();
-            earth.move_right(1);
-            earth.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
-
-            let moon = earth.add_child();
-            moon.scale = new Vec4(.25,.25,.25,1);
-            moon.move_right(.75);
-            moon.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
-
-            let light = moon.add_child();
-            light.data = new Light([0.2, 0.8, 0.2]);
-
-            let other_sphere = sol.add_child();
-            other_sphere.move_left(1);
-            other_sphere.data = Mesh.uv_sphere(gl, shader_program, 32, default_mat);
-
-            let lamp = sol.add_child();
-            lamp.data = Mesh.uv_sphere(gl, shader_program, 8, default_mat);
-            lamp.scale = new Vec4(.25,.5,.25,1);
-
-            let lamp_light = lamp.add_child();
-            lamp_light.data = new Light([1, .2, .2]);
+            water.data = Mesh.from_heightmap(gl, shader_program, Heightmap.generate_flat(Math.pow(2, scale), 1), 0, 1, shiny_mat, new Vec4(.3,.3,.8));
+            water.move_down(1.49);
+            water.scale = new Vec4(100,1,100);
 
             setInterval(update, DESIRED_MSPT);
 
@@ -176,14 +324,21 @@
 
             set_uniform_vector3(gl, shader_program, "fog_color", [0.8, 0.9, 1]);
             set_uniform_scalar(gl, shader_program, "fog_near", 4);
-            set_uniform_scalar(gl, shader_program, "fog_far", 10);
+            set_uniform_scalar(gl, shader_program, "fog_far", 15);
 
             set_uniform_int(gl, shader_program, "size", 0);
             set_uniform_scalar(gl, shader_program, "linear_scale", point_linear_scale)
 
             set_render_params( gl );
+
+            let map_interval = window.setInterval(function() {
+              map = Heightmap.diamond_square_map(scale,scale,.05, -.2, 3, mid,mid)
+              boxscape.data = Mesh.from_heightmap(gl, shader_program, map, 0, 4, dull_mat, new Vec4(.4,.9,.4), true);
+            }, 5000)
             
             requestAnimationFrame(render);
+
+            let loaded = 0
 
             function render(now) {
               requestAnimationFrame(render);
@@ -192,13 +347,12 @@
               last_update = now;
               total_delta += time_delta
 
-              sol.yaw_left(0.001);
-              earth.yaw_left(0.001);
-              other_sphere.roll_cw(0.002);
-              other_sphere.yaw_right(0.002);
-              lamp.z = Math.sin(total_delta);
+              boxscape.scale = new Vec4(.6,Math.abs(Math.cos((total_delta/(10/(2*Math.PI)))+(Math.PI/2)))*.6,.6);
+              let lightvec = new Vec4(1,.6,.2).scaled(rand_max_min(.9,1))
+              flamelight.data = new Light([lightvec.x,lightvec.y,lightvec.z])
 
               let view = camera.get_view();
+              tree.yaw_left(.001)
 
               let pos = [camera.x, camera.y, camera.z];
               set_uniform_vector3(gl, shader_program, "camera_pos", pos);
@@ -269,7 +423,7 @@
             }
 
             function update() {
-              camera.update();
+              camera.update(Heightmap.good_map);
               projection.update();
               update_labels();
             }

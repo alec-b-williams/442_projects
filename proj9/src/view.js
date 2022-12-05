@@ -4,12 +4,12 @@ const rotate_scale = 0.005;
 class View {
 
   constructor(input) {
-    this.x = 4;
-    this.y = 7;
-    this.z = 0;
+    this.x = -15.5;
+    this.y = 1;
+    this.z = 5;
     this.pitch = 0;
     this.roll = 0;
-    this.yaw = .75;
+    this.yaw = .4;
     this.input = input;
     this.inversion = 1;
     this.orient = new Mat4();
@@ -44,7 +44,7 @@ class View {
     this.orient = yaw.mul(pitch).mul(roll);
   }
 
-  update() {
+  update(map) {
     let keys = this.input.keys_down_list();
     let x=0, y=0, z=0, p=0, r=0, ya=0;
 
@@ -74,10 +74,10 @@ class View {
     }
     
     if (keys.includes("KeyQ")) {
-      this.roll_ccw(rotate_scale);
+      //this.roll_ccw(rotate_scale);
     }
     if (keys.includes("KeyE")) {
-      this.roll_cw(rotate_scale);
+      //this.roll_cw(rotate_scale);
     }
     if (keys.includes("ArrowRight")) {
       this.yaw_right(rotate_scale);
